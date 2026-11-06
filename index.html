@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="칭찬 그랑프리">
+<meta name="theme-color" content="#14161b">
+<meta name="robots" content="noindex">
+<title>칭찬 그랑프리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+/* Layout: pit-wall timing screen — two driver cards with their own circuit, team championship strip, race log.
+   Single committed night-race look. One iPad, data in this browser only. */
+:root{
+  color-scheme: dark;
+  --asphalt:#14161b;
+  --panel:#1d2027;
+  --panel-2:#252932;
+  --line:#323743;
+  --fg:#f3f4f6;
+  --muted:#a2a8b4;
+  --kerb:#e10600;
+  --flag:#ffd400;
+  --purple:#b26bff;
+  --display:"Black Han Sans","Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --body:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --num:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{background:var(--asphalt);color:var(--fg);margin:0}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{font-family:var(--body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding-block:16px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--flag);outline-offset:2px}
+
+/* header */
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.chk{width:34px;height:34px;flex:none;border-radius:6px;background:
+  conic-gradient(var(--fg) 25%,#000 0 50%,var(--fg) 0 75%,#000 0) 0 0/12px 12px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(26px,5vw,38px);line-height:1;margin:0;letter-spacing:.5px}
+h1 small{display:block;font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.12em;margin-top:6px}
+.status{font-size:13px;color:var(--muted);width:100%;order:3}
+.status.warn{color:var(--flag)}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-weight:600}
+.ghost:hover{border-color:var(--muted)}
+.lock{font-weight:700}
+.lock.open{border-color:var(--flag);color:var(--flag)}
+
+/* driver cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.card{background:var(--panel);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;border-top:6px solid var(--team);min-width:0}
+.c-head{display:flex;align-items:center;gap:12px}
+.num{font-family:var(--num);font-weight:800;font-size:30px;line-height:1;min-width:52px;height:52px;padding:0 6px;border-radius:12px;background:var(--team);color:#fff;display:grid;place-items:center;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.who{min-width:0;flex:1}
+.name{font-family:var(--display);font-size:28px;line-height:1.1}
+.round{font-size:13px;color:var(--muted);font-weight:600}
+.round b{color:var(--fg)}
+.pts{text-align:right}
+.pts .big{font-family:var(--num);font-weight:800;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.pts .lbl{font-size:11px;color:var(--muted);letter-spacing:.1em}
+.trackbox{background:var(--panel-2);border-radius:14px;padding:6px}
+.trackbox svg{display:block;width:100%;height:auto}
+.t-edge{fill:none;stroke:#0b0c0f;stroke-width:7.4;stroke-linejoin:round}
+.t-kerb{fill:none;stroke:var(--kerb);stroke-width:6.6;stroke-dasharray:1.2 1.2;stroke-linejoin:round;opacity:.85}
+.t-asph{fill:none;stroke:#3a3e48;stroke-width:5.4;stroke-linejoin:round}
+.t-trail{fill:none;stroke-width:5.4;stroke-linecap:round;stroke-linejoin:round;opacity:.55}
+.t-center{fill:none;stroke:#565b67;stroke-width:.25;stroke-dasharray:1 1.4}
+.cell{fill:#6b7180}
+.cell.done{fill:#fff}
+.cell.sec{fill:var(--purple)}
+.sec-lbl{font-family:var(--num);font-weight:700;font-size:3.2px;fill:var(--purple)}
+.car-tag{font-family:var(--num);font-weight:800;font-size:3.4px;fill:#fff}
+.meter{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px}
+.meter .muted{color:var(--muted)}
+.meter b{font-family:var(--num);font-size:18px;font-variant-numeric:tabular-nums}
+.btns{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.go{border:0;border-radius:14px;padding:16px 10px;font-family:var(--display);font-size:22px;background:var(--team);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35);transition:transform .08s}
+.go:active{transform:scale(.97)}
+.go.drs{background:var(--purple)}
+.go small{display:block;font-family:var(--body);font-size:12px;font-weight:600;opacity:.9}
+.locked .go{opacity:.55}
+.trophies{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.trophy{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--fg);font-weight:600}
+.trophy b{color:var(--flag);font-family:var(--num)}
+
+/* team */
+.team{background:var(--panel);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.team-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2{font-family:var(--display);font-weight:400;font-size:22px;margin:0}
+.team-head .goal{font-size:14px;color:var(--muted)}
+.team-head .goal b{font-family:var(--num);font-size:20px;color:var(--fg)}
+.bar{height:22px;border-radius:999px;background:var(--panel-2);overflow:hidden;display:flex}
+.bar span{height:100%;transition:width .6s}
+.team p{margin:0;font-size:14px;color:var(--muted)}
+.team p b{color:var(--flag)}
+
+/* log */
+.log{display:flex;flex-direction:column;gap:10px}
+.log ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.log li{display:grid;grid-template-columns:auto auto 1fr auto auto auto;align-items:center;gap:10px;background:var(--panel);border-radius:12px;padding:10px 12px;font-size:14px}
+.dot{width:12px;height:12px;border-radius:50%}
+.log .k{font-weight:800}
+.log .r{min-width:0;overflow-wrap:anywhere}
+.log .p{font-family:var(--num);font-weight:800;font-size:17px}
+.log .t{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.log .by{color:var(--muted);font-size:12px}
+.del{background:none;border:1px solid transparent;border-radius:8px;padding:2px 8px;font-size:12px;color:var(--muted)}
+.del:hover{border-color:var(--line)}
+.del.arm{color:#fff;background:var(--kerb)}
+.empty{color:var(--muted);font-size:14px;margin:0;background:var(--panel);border-radius:12px;padding:14px}
+@media (max-width:560px){
+  .log li{grid-template-columns:auto 1fr auto;row-gap:2px}
+  .log .k{grid-column:2}.log .p{grid-column:3;grid-row:1}
+  .log .r{grid-column:1/-1}.log .t{grid-column:1/3}.log .by{grid-column:1/3}.log .del{grid-column:3}
+}
+
+/* sheets */
+.veil{position:fixed;inset:0;background:rgba(5,6,8,.72);display:grid;place-items:center;z-index:20;padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px))}
+.sheet{background:var(--panel);border-radius:20px;width:min(520px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px;border-top:6px solid var(--team,var(--flag))}
+.sheet h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:9px 14px;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--team,var(--flag));border-color:transparent;color:#fff}
+label{font-size:13px;color:var(--muted);font-weight:600;display:flex;flex-direction:column;gap:6px}
+input[type=text],input[type=number],input[type=password]{font:inherit;font-size:16px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);padding:3px}
+.row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.row.left{justify-content:flex-start}
+.primary{border:0;border-radius:12px;padding:12px 22px;font-weight:800;background:var(--team,var(--flag));color:#111}
+.sheet.add .primary{color:#fff}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.fieldset-title{font-family:var(--display);font-size:18px;margin:6px 0 0}
+.note{font-size:12px;color:var(--muted);margin:0}
+.note.warn{color:var(--flag)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+
+/* pin pad */
+.pin-dots{display:flex;gap:14px;justify-content:center;padding:6px 0}
+.pin-dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--muted)}
+.pin-dots i.on{background:var(--flag);border-color:var(--flag)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad button{border:0;background:var(--panel-2);border-radius:14px;padding:16px 0;font-family:var(--num);font-weight:700;font-size:26px}
+.pad button:active{background:var(--line)}
+.pin-msg{text-align:center;min-height:1.5em;font-size:14px;color:var(--muted)}
+.pin-msg.err{color:var(--kerb)}
+
+/* celebration */
+.cele{text-align:center;align-items:center;border:2px solid var(--team,var(--flag));border-top-width:6px}
+.cele .eyebrow{font-family:var(--num);font-weight:700;letter-spacing:.2em;color:var(--flag);font-size:14px}
+.cele h3{font-size:34px}
+.cele .reward{background:var(--panel-2);border-radius:14px;padding:14px 16px;font-size:17px;font-weight:700;width:100%}
+.cele .reward small{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}
+.confetti i{position:absolute;top:-20px;width:10px;height:16px;animation:fall 2.6s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.go{transition:none}.bar span{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="chk" aria-hidden="true"></div>
+      <h1>칭찬 그랑프리<small>칭찬 1번 = 1칸 전진</small></h1>
+    </div>
+    <button class="ghost lock" id="btnLock" type="button">🔒 잠김</button>
+    <button class="ghost" id="btnSettings" type="button">설정</button>
+    <span class="status" id="status"></span>
+  </header>
+
+  <main class="grid" id="drivers" aria-label="드라이버"></main>
+
+  <section class="team" aria-label="팀 챔피언십">
+    <div class="team-head">
+      <h2>형제 팀 챔피언십</h2>
+      <span class="goal" id="teamGoal"></span>
+    </div>
+    <div class="bar" id="teamBar"></div>
+    <p id="teamText"></p>
+  </section>
+
+  <section class="log" aria-label="최근 기록">
+    <h2>최근 기록</h2>
+    <p class="empty" id="logEmpty">아직 기록이 없어요. 칭찬할 일이 생기면 <b>+1 칭찬</b> 버튼을 눌러 첫 칸을 달려 보세요.</p>
+    <ol id="log"></ol>
+  </section>
+</div>
+
+<!-- PIN pad -->
+<div class="veil" id="pinVeil" hidden>
+  <div class="sheet" id="pinSheet">
+    <h3 id="pinTitle">아빠·엄마 확인</h3>
+    <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+    <div class="pin-msg" id="pinMsg">비밀번호 4자리를 눌러 주세요</div>
+    <div class="pad" id="pad"></div>
+    <div class="row"><button type="button" class="ghost" id="pinCancel">취소</button></div>
+  </div>
+</div>
+
+<!-- add points -->
+<div class="veil" id="addVeil" hidden>
+  <form class="sheet add" id="addForm">
+    <h3 id="addTitle">칭찬 포인트</h3>
+    <div class="chips" id="chips"></div>
+    <label for="addReason">어떤 일을 했나요? (선택)
+      <input type="text" id="addReason" maxlength="60" placeholder="예: 동생 신발 정리해 줌" autocomplete="off">
+    </label>
+    <div>
+      <p class="note" style="margin-bottom:6px">누가 줬나요?</p>
+      <div class="seg" id="bySeg"></div>
+    </div>
+    <div class="row">
+      <button type="button" class="ghost" id="addCancel">취소</button>
+      <button type="submit" class="primary" id="addGo">출발!</button>
+    </div>
+  </form>
+</div>
+
+<!-- celebration -->
+<div class="veil" id="celeVeil" hidden>
+  <div class="sheet cele" id="celeSheet">
+    <div class="eyebrow" id="celeEyebrow"></div>
+    <h3 id="celeTitle"></h3>
+    <div class="reward"><small>보상</small><span id="celeReward"></span></div>
+    <button type="button" class="primary" id="celeOk">좋아요!</button>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="veil" id="setVeil" hidden>
+  <form class="sheet" id="setForm">
+    <h3>설정</h3>
+    <p class="fieldset-title">드라이버</p>
+    <div class="fields">
+      <label for="s_a_name">첫째 이름<input type="text" id="s_a_name" maxlength="10"></label>
+      <label for="s_a_number">차 번호<input type="number" id="s_a_number" min="0" max="99" inputmode="numeric"></label>
+      <label for="s_a_color">팀 색깔<input type="color" id="s_a_color"></label>
+    </div>
+    <div class="fields">
+      <label for="s_b_name">둘째 이름<input type="text" id="s_b_name" maxlength="10"></label>
+      <label for="s_b_number">차 번호<input type="number" id="s_b_number" min="0" max="99" inputmode="numeric"></label>
+      <label for="s_b_color">팀 색깔<input type="color" id="s_b_color"></label>
+    </div>
+    <p class="fieldset-title">레이스</p>
+    <label for="s_lap">서킷 한 바퀴 칸 수 (10~60)<input type="number" id="s_lap" min="10" max="60" inputmode="numeric"></label>
+    <p class="note">칸 수를 바꾸면 지금까지 모은 포인트는 그대로 두고 위치만 새 칸 수로 다시 계산해요.</p>
+    <label for="s_r1">섹터 1 통과 보상<input type="text" id="s_r1" maxlength="60"></label>
+    <label for="s_r2">섹터 2 통과 보상 (피트스톱)<input type="text" id="s_r2" maxlength="60"></label>
+    <label for="s_rw">결승선 우승 보상<input type="text" id="s_rw" maxlength="60"></label>
+    <p class="fieldset-title">팀 챔피언십</p>
+    <label for="s_tg">두 사람 합계 목표 포인트<input type="number" id="s_tg" min="10" max="1000" inputmode="numeric"></label>
+    <label for="s_tr">팀 목표 달성 보상<input type="text" id="s_tr" maxlength="60"></label>
+    <p class="fieldset-title">비밀번호</p>
+    <label for="s_pin">새 비밀번호 4자리 (바꿀 때만 입력)<input type="password" id="s_pin" maxlength="4" inputmode="numeric" pattern="[0-9]{4}" autocomplete="off"></label>
+    <p class="fieldset-title">백업</p>
+    <p class="note" id="backupInfo"></p>
+    <div class="row left">
+      <button type="button" class="ghost" id="btnExport">백업 파일 저장</button>
+      <button type="button" class="ghost" id="btnImport">백업 파일 불러오기</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+    <p class="note" id="importMsg"></p>
+    <div class="row">
+      <button type="button" class="ghost" id="setCancel">닫기</button>
+      <button type="submit" class="primary" id="setSave">저장</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(() => {
+"use strict";
+const STORE_KEY = "praise-gp.v1";
+const UNLOCK_MS = 5 * 60 * 1000;
+const KIDS = ["a", "b"];
+const DEFAULTS = {
+  drivers: {
+    a: { name: "첫째", number: 7,  color: "#e8202a" },
+    b: { name: "둘째", number: 11, color: "#1f7cff" }
+  },
+  lapLen: 30,
+  rewards: {
+    s1: "스티커 1장 또는 10분 더 놀기",
+    s2: "피트스톱: 아빠랑 원하는 놀이 20분",
+    win: "원하는 간식이나 미니카 1대"
+  },
+  team: { goal: 100, reward: "가족 나들이 (어디 갈지 둘이 함께 정하기)" }
+};
+const REASONS = ["착한 일", "정리정돈", "양보·도와주기", "형제 사이좋게", "숙제·공부", "밥 잘 먹기", "인사·예절", "스스로 하기"];
+const GIVERS = ["아빠", "엄마"];
+// Stylised circuits (not to scale) — the season calendar, one per lap.
+const CIRCUITS = [
+  { code: "KOR", name: "코리아 영암", pts: [[10,48],[60,50],[88,46],[90,34],[70,30],[62,18],[80,10],[40,8],[30,20],[16,22],[8,34]] },
+  { code: "MON", name: "모나코",     pts: [[12,40],[30,46],[50,52],[78,50],[90,40],[80,30],[86,16],[70,10],[50,16],[40,28],[22,24],[10,30]] },
+  { code: "JPN", name: "스즈카",     pts: [[10,30],[24,48],[50,52],[66,40],[80,50],[92,38],[86,18],[62,10],[46,22],[30,12],[14,14]] },
+  { code: "GBR", name: "실버스톤",   pts: [[14,46],[40,52],[64,48],[90,44],[86,26],[70,24],[66,10],[42,8],[34,22],[16,18],[8,30]] },
+  { code: "ITA", name: "몬차",       pts: [[10,44],[50,50],[88,46],[94,32],[84,16],[52,10],[20,12],[12,22],[22,30],[12,36]] },
+  { code: "BRA", name: "인터라고스", pts: [[20,50],[58,52],[86,42],[80,24],[60,30],[50,18],[64,8],[30,8],[12,22],[28,32],[10,40]] },
+  { code: "SGP", name: "마리나베이", pts: [[10,48],[38,50],[40,38],[70,40],[90,48],[92,22],[70,10],[50,20],[30,10],[12,18]] },
+  { code: "USA", name: "라스베이거스", pts: [[10,46],[88,48],[92,36],[60,30],[90,22],[86,8],[14,8],[8,26]] }
+];
+const SVGNS = "http://www.w3.org/2000/svg";
+const $ = (s) => document.querySelector(s);
+const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- storage (this browser only) ---------- */
+let state = { cfg: clone(DEFAULTS), entries: [], pinHash: null, lastBackup: 0 };
+let storageOk = true;
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function merge(base, over){
+  const out = clone(base);
+  if (!over || typeof over !== "object") return out;
+  for (const k of Object.keys(base)) {
+    if (base[k] && typeof base[k] === "object") out[k] = merge(base[k], over[k]);
+    else if (over[k] !== undefined && over[k] !== null && over[k] !== "") out[k] = over[k];
+  }
+  return out;
+}
+function cleanEntries(list){
+  if (!Array.isArray(list)) return [];
+  return list.filter((e) => e && KIDS.includes(e.kid) && Number(e.pts) > 0 && Number(e.at) > 0)
+    .map((e) => ({ id: String(e.id || (e.at + Math.random())), kid: e.kid, pts: Math.min(5, Math.round(Number(e.pts))),
+                   reason: String(e.reason || "칭찬").slice(0, 80), by: e.by ? String(e.by).slice(0, 10) : "", at: Number(e.at) }));
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    state.cfg = merge(DEFAULTS, s.cfg);
+    state.entries = cleanEntries(s.entries);
+    state.pinHash = typeof s.pinHash === "string" ? s.pinHash : null;
+    state.lastBackup = Number(s.lastBackup) || 0;
+  } catch (e) { storageOk = false; }
+}
+function save(){
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    storageOk = true;
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  } catch (e) {
+    storageOk = false;
+    setStatus("이 브라우저에 저장하지 못했어요. 개인정보 보호(비공개) 모드가 꺼져 있는지 확인해 주세요.", true);
+  }
+}
+const cfg = () => state.cfg;
+
+/* ---------- PIN lock ---------- */
+let unlockedUntil = 0, lockTimer = null, pinCb = null, pinBuf = "", pinMode = "check", pinFirst = "";
+async function hashPin(pin){
+  const txt = "praise-gp:" + pin;
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch (e) {
+    let h = 0; for (const c of txt) h = (h * 31 + c.charCodeAt(0)) | 0; return "x" + h;
+  }
+}
+function isUnlocked(){ return Date.now() < unlockedUntil; }
+function refreshLock(){
+  const b = $("#btnLock"), open = isUnlocked();
+  b.textContent = open ? `🔓 열림 · ${Math.max(1, Math.ceil((unlockedUntil - Date.now()) / 60000))}분` : "🔒 잠김";
+  b.classList.toggle("open", open);
+  document.body.classList.toggle("locked", !open);
+}
+function unlock(){
+  unlockedUntil = Date.now() + UNLOCK_MS;
+  clearInterval(lockTimer);
+  lockTimer = setInterval(() => { refreshLock(); if (!isUnlocked()) { clearInterval(lockTimer); renderLog(); } }, 15000);
+  refreshLock(); renderLog();
+}
+function lockNow(){ unlockedUntil = 0; clearInterval(lockTimer); refreshLock(); renderLog(); }
+function needUnlock(cb){
+  if (isUnlocked()) { unlockedUntil = Date.now() + UNLOCK_MS; refreshLock(); cb(); return; }
+  pinCb = cb; pinBuf = "";
+  if (!state.pinHash) { pinMode = "new1"; $("#pinTitle").textContent = "비밀번호 만들기"; pinMsg("아빠·엄마만 아는 4자리를 정해 주세요"); }
+  else { pinMode = "check"; $("#pinTitle").textContent = "아빠·엄마 확인"; pinMsg("비밀번호 4자리를 눌러 주세요"); }
+  drawDots(); $("#pinVeil").hidden = false;
+}
+function pinMsg(t, err){ const m = $("#pinMsg"); m.textContent = t; m.classList.toggle("err", !!err); }
+function drawDots(){ document.querySelectorAll("#pinDots i").forEach((d, i) => d.classList.toggle("on", i < pinBuf.length)); }
+async function pinDigit(d){
+  if (pinBuf.length >= 4) return;
+  pinBuf += d; drawDots();
+  if (pinBuf.length < 4) return;
+  const entered = pinBuf;
+  await new Promise((r) => setTimeout(r, 120));
+  pinBuf = ""; drawDots();
+  if (pinMode === "new1") { pinFirst = entered; pinMode = "new2"; pinMsg("한 번 더 눌러 주세요"); return; }
+  if (pinMode === "new2") {
+    if (entered !== pinFirst) { pinMode = "new1"; pinMsg("두 번이 달라요. 처음부터 다시 정해 주세요", true); return; }
+    state.pinHash = await hashPin(entered); save();
+    return pinDone();
+  }
+  if ((await hashPin(entered)) === state.pinHash) return pinDone();
+  pinMsg("비밀번호가 달라요", true);
+}
+function pinDone(){ $("#pinVeil").hidden = true; unlock(); const cb = pinCb; pinCb = null; if (cb) cb(); }
+(function buildPad(){
+  const pad = $("#pad");
+  ["1","2","3","4","5","6","7","8","9","","0","⌫"].forEach((k) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = k;
+    if (!k) { b.disabled = true; b.style.visibility = "hidden"; }
+    else if (k === "⌫") { b.setAttribute("aria-label", "지우기"); b.addEventListener("click", () => { pinBuf = pinBuf.slice(0, -1); drawDots(); }); }
+    else b.addEventListener("click", () => pinDigit(k));
+    pad.appendChild(b);
+  });
+})();
+$("#pinCancel").addEventListener("click", () => { $("#pinVeil").hidden = true; pinCb = null; });
+$("#btnLock").addEventListener("click", () => { if (isUnlocked()) lockNow(); else needUnlock(() => {}); });
+
+/* ---------- derived ---------- */
+const shown = { a: null, b: null };
+const ui = {};
+function lapLen(){ const n = Math.round(Number(cfg().lapLen)); return n >= 10 && n <= 60 ? n : 30; }
+function secPos(){ const L = lapLen(); return [Math.round(L/3), Math.round(2*L/3)]; }
+function setStatus(t, warn){ const s = $("#status"); s.textContent = t || ""; s.classList.toggle("warn", !!warn); }
+function totals(){ const t = { a: 0, b: 0 }; for (const e of state.entries) t[e.kid] += e.pts; return t; }
+function place(total){ const L = lapLen(), lap = Math.floor(total / L); return { lap, pos: total % L, circuit: CIRCUITS[lap % CIRCUITS.length] }; }
+
+/* ---------- track geometry ---------- */
+function pathFor(pts){
+  const n = pts.length, P = (i) => pts[(i + n) % n];
+  let d = `M${P(0)[0]},${P(0)[1]}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = P(i-1), p1 = P(i), p2 = P(i+1), p3 = P(i+2);
+    const c1 = [p1[0] + (p2[0]-p0[0])/6, p1[1] + (p2[1]-p0[1])/6];
+    const c2 = [p2[0] - (p3[0]-p1[0])/6, p2[1] - (p3[1]-p1[1])/6];
+    d += ` C${c1[0].toFixed(2)},${c1[1].toFixed(2)} ${c2[0].toFixed(2)},${c2[1].toFixed(2)} ${p2[0]},${p2[1]}`;
+  }
+  return d + "Z";
+}
+function el(tag, attrs, parent){
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* ---------- driver cards ---------- */
+function buildCard(kid){
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="c-head">
+      <div class="num"></div>
+      <div class="who"><div class="name"></div><div class="round"></div></div>
+      <div class="pts"><div class="big">0</div><div class="lbl">누적 포인트</div></div>
+    </div>
+    <div class="trackbox"><svg viewBox="0 0 100 60" role="img"></svg></div>
+    <div class="meter"><span class="m1"></span><span class="m2 muted"></span></div>
+    <div class="btns">
+      <button type="button" class="go one">+1 칭찬<small>한 칸 전진</small></button>
+      <button type="button" class="go drs">+2 DRS<small>아주 큰 칭찬</small></button>
+    </div>
+    <div class="trophies"></div>`;
+  $("#drivers").appendChild(card);
+  const r = {
+    card, num: card.querySelector(".num"), name: card.querySelector(".name"), round: card.querySelector(".round"),
+    big: card.querySelector(".big"), svg: card.querySelector("svg"), m1: card.querySelector(".m1"),
+    m2: card.querySelector(".m2"), one: card.querySelector(".one"), drs: card.querySelector(".drs"),
+    trophies: card.querySelector(".trophies"), lap: -1, len: 0, L: 1, anim: null
+  };
+  r.one.addEventListener("click", () => needUnlock(() => openAdd(kid, 1)));
+  r.drs.addEventListener("click", () => needUnlock(() => openAdd(kid, 2)));
+  ui[kid] = r;
+}
+
+function drawTrack(kid, lap){
+  const r = ui[kid], svg = r.svg, d = cfg().drivers[kid];
+  const circ = CIRCUITS[lap % CIRCUITS.length];
+  svg.textContent = "";
+  svg.setAttribute("aria-label", `${circ.name} 서킷`);
+  const dd = pathFor(circ.pts);
+  el("path", { d: dd, class: "t-edge" }, svg);
+  el("path", { d: dd, class: "t-kerb" }, svg);
+  const asph = el("path", { d: dd, class: "t-asph" }, svg);
+  r.trail = el("path", { d: dd, class: "t-trail", stroke: d.color }, svg);
+  el("path", { d: dd, class: "t-center" }, svg);
+  r.path = asph;
+  r.L = asph.getTotalLength() || 1;
+  const L = lapLen(), [s1, s2] = secPos();
+  r.cells = [];
+  const g = el("g", {}, svg);
+  for (let i = 1; i < L; i++) {
+    const p = asph.getPointAtLength(r.L * i / L);
+    const sec = i === s1 || i === s2;
+    r.cells[i] = el("circle", { cx: p.x.toFixed(2), cy: p.y.toFixed(2), r: sec ? 1.3 : 0.65, class: "cell" + (sec ? " sec" : "") }, g);
+    if (sec) {
+      const t = el("text", { x: (p.x + 2.2).toFixed(2), y: (p.y - 2.2).toFixed(2), class: "sec-lbl" }, g);
+      t.textContent = i === s1 ? "S1" : "S2";
+    }
+  }
+  const p0 = asph.getPointAtLength(0), p1 = asph.getPointAtLength(0.6);
+  const ang = Math.atan2(p1.y - p0.y, p1.x - p0.x) * 180 / Math.PI;
+  const fl = el("g", { transform: `translate(${p0.x} ${p0.y}) rotate(${ang})` }, svg);
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++)
+    el("rect", { x: -0.9 + j*0.9, y: -2.7 + i*0.9, width: 0.9, height: 0.9, fill: (i + j) % 2 ? "#000" : "#fff" }, fl);
+  r.car = el("g", {}, svg);
+  const body = el("g", {}, r.car);
+  el("rect", { x: -3, y: -1.5, width: 0.9, height: 3, rx: 0.2, fill: "#111" }, body);
+  el("rect", { x: -2.4, y: -1.9, width: 1.2, height: 0.7, rx: 0.25, fill: "#111" }, body);
+  el("rect", { x: -2.4, y: 1.2, width: 1.2, height: 0.7, rx: 0.25, fill: "#111" }, body);
+  el("rect", { x: 1.1, y: -1.8, width: 1.0, height: 0.6, rx: 0.25, fill: "#111" }, body);
+  el("rect", { x: 1.1, y: 1.2, width: 1.0, height: 0.6, rx: 0.25, fill: "#111" }, body);
+  el("path", { d: "M-2.6,-0.9 L1.2,-0.7 L3.2,-0.25 L3.2,0.25 L1.2,0.7 L-2.6,0.9 Z", fill: d.color, stroke: "#fff", "stroke-width": 0.2 }, body);
+  el("rect", { x: 2.7, y: -1.6, width: 0.6, height: 3.2, rx: 0.2, fill: d.color }, body);
+  el("circle", { cx: -0.3, cy: 0, r: 0.45, fill: "#fff" }, body);
+  r.carBody = body;
+  r.tag = el("g", {}, svg);
+  el("rect", { x: -3.2, y: -7.4, width: 6.4, height: 4.2, rx: 1.2, fill: d.color, stroke: "#fff", "stroke-width": 0.25 }, r.tag);
+  const tx = el("text", { x: 0, y: -4.2, "text-anchor": "middle", class: "car-tag" }, r.tag);
+  tx.textContent = d.number;
+  r.lap = lap;
+}
+
+function setCar(kid, len){
+  const r = ui[kid];
+  const L = r.L, l = Math.max(0, Math.min(len, L - 0.001));
+  const p = r.path.getPointAtLength(l), q = r.path.getPointAtLength(Math.min(L, l + 0.6));
+  const a = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+  r.car.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+  r.carBody.setAttribute("transform", `rotate(${a.toFixed(1)})`);
+  r.tag.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+  r.trail.setAttribute("stroke-dasharray", l > 0.05 ? `${l.toFixed(2)} ${L}` : `0 ${L}`);
+  const cellsDone = Math.floor(l / L * lapLen() + 0.001);
+  r.cells.forEach((c, i) => c && c.classList.toggle("done", i <= cellsDone));
+  r.len = l;
+}
+
+function tween(kid, from, to, ms){
+  const r = ui[kid];
+  return new Promise((res) => {
+    if (reduceMotion || ms <= 0) { setCar(kid, to); res(); return; }
+    const t0 = performance.now();
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / ms), e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2) / 2;
+      setCar(kid, from + (to - from) * e);
+      if (k < 1) r.anim = requestAnimationFrame(step); else res();
+    };
+    cancelAnimationFrame(r.anim);
+    r.anim = requestAnimationFrame(step);
+  });
+}
+
+async function moveTo(kid, total){
+  const r = ui[kid], prev = shown[kid];
+  const pl = place(total), L = lapLen();
+  shown[kid] = total;
+  if (prev === null || total < prev || total - prev > 3 || r.lap < 0) {
+    drawTrack(kid, pl.lap);
+    setCar(kid, r.L * pl.pos / L);
+    return;
+  }
+  if (total === prev) return;
+  const pp = place(prev);
+  if (pp.lap !== pl.lap) {
+    await tween(kid, r.len, r.L, 700);
+    drawTrack(kid, pl.lap);
+    setCar(kid, 0);
+    await tween(kid, 0, r.L * pl.pos / L, 500);
+  } else {
+    await tween(kid, r.len, r.L * pl.pos / L, 650 + 250 * (total - prev));
+  }
+}
+
+function renderCard(kid, total){
+  const r = ui[kid], d = cfg().drivers[kid], pl = place(total), L = lapLen(), [s1, s2] = secPos();
+  r.card.style.setProperty("--team", d.color);
+  r.num.textContent = d.number;
+  r.name.textContent = d.name;
+  r.round.textContent = "";
+  const b = document.createElement("b"); b.textContent = `R${pl.lap + 1} · ${pl.circuit.name}`;
+  r.round.append(b, ` ${pl.circuit.code} · ${pl.lap === 0 ? "첫 레이스" : pl.lap + "번 완주"}`);
+  r.big.textContent = total;
+  r.m1.textContent = "";
+  const nb = document.createElement("b"); nb.textContent = L - pl.pos;
+  r.m1.append("결승선까지 ", nb, "칸");
+  r.m2.textContent = pl.pos < s1 ? `섹터 1까지 ${s1 - pl.pos}칸` : pl.pos < s2 ? `섹터 2(피트스톱)까지 ${s2 - pl.pos}칸` : "마지막 섹터, 힘내!";
+  r.trophies.textContent = "";
+  if (pl.lap === 0) { r.trophies.textContent = "첫 우승을 향해 달리는 중이에요."; return; }
+  const lbl = document.createElement("span"); lbl.textContent = "우승 트로피"; r.trophies.appendChild(lbl);
+  const counts = new Map();
+  for (let i = 0; i < pl.lap; i++) { const c = CIRCUITS[i % CIRCUITS.length]; counts.set(c.code, (counts.get(c.code) || 0) + 1); }
+  for (const c of CIRCUITS) {
+    if (!counts.has(c.code)) continue;
+    const t = document.createElement("span"); t.className = "trophy"; t.textContent = `${c.name} `;
+    const n = document.createElement("b"); n.textContent = counts.get(c.code) > 1 ? `×${counts.get(c.code)}` : "🏆";
+    t.appendChild(n); r.trophies.appendChild(t);
+  }
+}
+
+function renderTeam(t){
+  const goal = Math.max(10, Math.round(Number(cfg().team.goal)) || 100);
+  const sum = t.a + t.b, done = Math.floor(sum / goal), cur = sum % goal;
+  const gl = $("#teamGoal"); gl.textContent = "";
+  const bb = document.createElement("b"); bb.textContent = `${cur} / ${goal}`;
+  gl.append(bb, " 포인트", done ? ` · 달성 ${done}회` : "");
+  const bar = $("#teamBar"); bar.textContent = "";
+  for (const k of KIDS) {
+    const s = document.createElement("span");
+    s.style.width = `${(cur / goal) * (sum ? t[k] / sum : 0) * 100}%`;
+    s.style.background = cfg().drivers[k].color;
+    bar.appendChild(s);
+  }
+  const p = $("#teamText"); p.textContent = "";
+  p.append(`두 사람 포인트를 합쳐서 ${goal}점이 되면 둘이 함께 받아요: `);
+  const rb = document.createElement("b"); rb.textContent = cfg().team.reward; p.appendChild(rb);
+  p.append(` (앞으로 ${goal - cur}점)`);
+}
+
+function fmtTime(ms){
+  const d = new Date(ms), now = new Date();
+  const hm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  if (d.toDateString() === now.toDateString()) return `오늘 ${hm}`;
+  const y = new Date(now); y.setDate(now.getDate() - 1);
+  if (d.toDateString() === y.toDateString()) return `어제 ${hm}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+}
+
+function renderLog(){
+  const list = $("#log"), es = state.entries.slice().sort((a, b) => b.at - a.at).slice(0, 30);
+  list.textContent = "";
+  $("#logEmpty").hidden = es.length > 0;
+  const open = isUnlocked();
+  for (const e of es) {
+    const li = document.createElement("li");
+    const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = cfg().drivers[e.kid].color;
+    const k = document.createElement("span"); k.className = "k"; k.textContent = cfg().drivers[e.kid].name;
+    const r = document.createElement("span"); r.className = "r"; r.textContent = e.reason;
+    const p = document.createElement("span"); p.className = "p"; p.textContent = `+${e.pts}`;
+    if (e.pts >= 2) p.style.color = "var(--purple)";
+    const by = document.createElement("span"); by.className = "by"; by.textContent = e.by || "";
+    const t = document.createElement("span"); t.className = "t"; t.textContent = fmtTime(e.at);
+    li.append(dot, k, r, p, by, t);
+    if (open) {
+      const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "지우기";
+      let timer = null;
+      del.addEventListener("click", () => {
+        if (!del.classList.contains("arm")) {
+          del.classList.add("arm"); del.textContent = "한 번 더 누르면 삭제";
+          timer = setTimeout(() => { del.classList.remove("arm"); del.textContent = "지우기"; }, 3000);
+          return;
+        }
+        clearTimeout(timer);
+        state.entries = state.entries.filter((x) => x.id !== e.id);
+        save(); renderAll(); setStatus("기록을 지웠어요");
+      });
+      li.appendChild(del);
+    }
+    list.appendChild(li);
+  }
+}
+
+/* ---------- celebrations ---------- */
+function milestones(prev, now){
+  const L = lapLen(), [s1, s2] = secPos();
+  let best = null;
+  for (let m = prev + 1; m <= now; m++) {
+    const r = m % L;
+    if (r === 0) best = { rank: 3, kind: "win", lap: m / L - 1 };
+    else if (r === s2 && (!best || best.rank < 2)) best = { rank: 2, kind: "s2" };
+    else if (r === s1 && (!best || best.rank < 1)) best = { rank: 1, kind: "s1" };
+  }
+  return best;
+}
+const celeQueue = [];
+function celebrate(kid, ms){ celeQueue.push({ kid, ms }); if ($("#celeVeil").hidden) showNextCele(); }
+function showNextCele(){
+  const it = celeQueue.shift();
+  if (!it) return;
+  const d = cfg().drivers[it.kid], rw = cfg().rewards;
+  $("#celeSheet").style.setProperty("--team", d.color);
+  if (it.ms.kind === "win") {
+    const c = CIRCUITS[it.ms.lap % CIRCUITS.length];
+    $("#celeEyebrow").textContent = `R${it.ms.lap + 1} · ${c.code} · 체커기`;
+    $("#celeTitle").textContent = `${d.name}, ${c.name} 우승!`;
+    $("#celeReward").textContent = rw.win;
+    confetti(d.color);
+  } else if (it.ms.kind === "s2") {
+    $("#celeEyebrow").textContent = "SECTOR 2 · 피트스톱";
+    $("#celeTitle").textContent = `${d.name}, 피트인!`;
+    $("#celeReward").textContent = rw.s2;
+  } else {
+    $("#celeEyebrow").textContent = "SECTOR 1 · 퍼플 섹터";
+    $("#celeTitle").textContent = `${d.name}, 섹터 1 통과!`;
+    $("#celeReward").textContent = rw.s1;
+  }
+  $("#celeVeil").hidden = false;
+}
+$("#celeOk").addEventListener("click", () => { $("#celeVeil").hidden = true; showNextCele(); });
+function confetti(color){
+  if (reduceMotion) return;
+  const box = document.createElement("div"); box.className = "confetti";
+  const cols = [color, "#fff", "#111", "#ffd400"];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement("i");
+    c.style.left = Math.random() * 100 + "%";
+    c.style.background = cols[i % cols.length];
+    c.style.animationDelay = (Math.random() * 0.8) + "s";
+    c.style.animationDuration = (2 + Math.random() * 1.6) + "s";
+    box.appendChild(c);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 4600);
+}
+
+/* ---------- render all ---------- */
+async function renderAll(){
+  const t = totals();
+  for (const k of KIDS) renderCard(k, t[k]);
+  renderTeam(t);
+  renderLog();
+  await Promise.all(KIDS.map(async (k) => {
+    const prev = shown[k];
+    await moveTo(k, t[k]);
+    if (prev !== null && t[k] > prev && t[k] - prev <= 3) {
+      const ms = milestones(prev, t[k]);
+      if (ms) celebrate(k, ms);
+    }
+  }));
+}
+function redrawTracks(){ for (const k of KIDS) { ui[k].lap = -1; shown[k] = null; } renderAll(); }
+
+/* ---------- add sheet ---------- */
+let addCtx = null, lastGiver = GIVERS[0];
+try { lastGiver = localStorage.getItem(STORE_KEY + ".giver") || GIVERS[0]; } catch (e) {}
+function openAdd(kid, pts){
+  addCtx = { kid, pts, chip: null, by: lastGiver };
+  const d = cfg().drivers[kid];
+  $("#addForm").style.setProperty("--team", pts === 2 ? "var(--purple)" : d.color);
+  $("#addTitle").textContent = `${d.name}에게 +${pts}${pts === 2 ? " DRS" : ""}`;
+  $("#addReason").value = "";
+  const chips = $("#chips"); chips.textContent = "";
+  for (const r of REASONS) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = r;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", "false"));
+      if (addCtx.chip === r) { addCtx.chip = null; return; }
+      addCtx.chip = r; b.setAttribute("aria-pressed", "true");
+    });
+    chips.appendChild(b);
+  }
+  const seg = $("#bySeg"); seg.textContent = "";
+  for (const g of GIVERS) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = g;
+    b.setAttribute("aria-pressed", String(g === addCtx.by));
+    b.addEventListener("click", () => { addCtx.by = g; seg.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.textContent === g))); });
+    seg.appendChild(b);
+  }
+  $("#addVeil").hidden = false;
+}
+$("#addCancel").addEventListener("click", () => { $("#addVeil").hidden = true; });
+$("#addForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (!addCtx) return;
+  const txt = $("#addReason").value.trim();
+  const reason = [addCtx.chip, txt].filter(Boolean).join(" · ") || "칭찬";
+  const now = Date.now();
+  state.entries.push({ id: now.toString(36) + Math.random().toString(36).slice(2, 6), kid: addCtx.kid, pts: addCtx.pts, reason, by: addCtx.by, at: now });
+  lastGiver = addCtx.by;
+  try { localStorage.setItem(STORE_KEY + ".giver", lastGiver); } catch (e) {}
+  $("#addVeil").hidden = true;
+  save();
+  if (storageOk) setStatus(backupNudge());
+  renderAll();
+});
+
+/* ---------- backup ---------- */
+function backupNudge(){
+  if (!state.entries.length) return "";
+  const days = state.lastBackup ? Math.floor((Date.now() - state.lastBackup) / 86400000) : null;
+  if (days === null) return "아직 백업을 한 번도 안 했어요. 설정 → 백업 파일 저장을 눌러 두면 안전해요.";
+  if (days >= 14) return `마지막 백업이 ${days}일 전이에요. 설정에서 백업 파일을 저장해 주세요.`;
+  return "";
+}
+function backupInfo(){
+  const n = state.entries.length;
+  const when = state.lastBackup ? new Date(state.lastBackup).toLocaleDateString("ko-KR") : "없음";
+  $("#backupInfo").textContent = `기록은 이 아이패드 브라우저에만 저장돼요. 지금 기록 ${n}건 · 마지막 백업 ${when}. 파일 앱의 iCloud Drive 에 저장해 두면 아이패드를 바꿔도 불러올 수 있어요.`;
+}
+$("#btnExport").addEventListener("click", async () => {
+  const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+  const data = JSON.stringify({ app: "praise-grand-prix", version: 1, exportedAt: d.toISOString(), cfg: state.cfg, entries: state.entries }, null, 1);
+  const name = `praise-grand-prix-backup-${stamp}.json`;
+  const file = new File([data], name, { type: "application/json" });
+  let ok = false;
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: name }); ok = true; }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  if (!ok) {
+    const url = URL.createObjectURL(file);
+    const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+  state.lastBackup = Date.now(); save(); backupInfo(); setStatus("백업 파일을 저장했어요");
+});
+$("#btnImport").addEventListener("click", () => $("#importFile").click());
+$("#importFile").addEventListener("change", async (ev) => {
+  const f = ev.target.files && ev.target.files[0];
+  ev.target.value = "";
+  if (!f) return;
+  const msg = $("#importMsg");
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s || s.app !== "praise-grand-prix" || !Array.isArray(s.entries)) throw new Error("format");
+    const incoming = cleanEntries(s.entries);
+    const have = new Set(state.entries.map((e) => e.id));
+    const added = incoming.filter((e) => !have.has(e.id));
+    state.entries = state.entries.concat(added);
+    if (s.cfg) state.cfg = merge(DEFAULTS, s.cfg);
+    save(); redrawTracks(); fillSettings();
+    msg.className = "note"; msg.textContent = `불러왔어요. 새 기록 ${added.length}건을 더했고, 이미 있던 기록은 그대로 뒀어요.`;
+  } catch (e) {
+    msg.className = "note warn"; msg.textContent = "칭찬 그랑프리 백업 파일이 아니에요. '백업 파일 저장'으로 만든 .json 파일을 골라 주세요.";
+  }
+});
+
+/* ---------- settings ---------- */
+function fillSettings(){
+  const c = cfg();
+  for (const k of KIDS) {
+    $(`#s_${k}_name`).value = c.drivers[k].name;
+    $(`#s_${k}_number`).value = c.drivers[k].number;
+    $(`#s_${k}_color`).value = c.drivers[k].color;
+  }
+  $("#s_lap").value = lapLen();
+  $("#s_r1").value = c.rewards.s1; $("#s_r2").value = c.rewards.s2; $("#s_rw").value = c.rewards.win;
+  $("#s_tg").value = c.team.goal; $("#s_tr").value = c.team.reward;
+  $("#s_pin").value = "";
+  backupInfo();
+}
+$("#btnSettings").addEventListener("click", () => needUnlock(() => { fillSettings(); $("#importMsg").textContent = ""; $("#setVeil").hidden = false; }));
+$("#setCancel").addEventListener("click", () => { $("#setVeil").hidden = true; });
+$("#setForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const next = clone(cfg());
+  for (const k of KIDS) {
+    next.drivers[k].name = $(`#s_${k}_name`).value.trim() || DEFAULTS.drivers[k].name;
+    const n = parseInt($(`#s_${k}_number`).value, 10);
+    next.drivers[k].number = Number.isFinite(n) ? Math.max(0, Math.min(99, n)) : DEFAULTS.drivers[k].number;
+    next.drivers[k].color = $(`#s_${k}_color`).value || DEFAULTS.drivers[k].color;
+  }
+  const lap = parseInt($("#s_lap").value, 10);
+  next.lapLen = Number.isFinite(lap) ? Math.max(10, Math.min(60, lap)) : 30;
+  next.rewards.s1 = $("#s_r1").value.trim() || DEFAULTS.rewards.s1;
+  next.rewards.s2 = $("#s_r2").value.trim() || DEFAULTS.rewards.s2;
+  next.rewards.win = $("#s_rw").value.trim() || DEFAULTS.rewards.win;
+  const tg = parseInt($("#s_tg").value, 10);
+  next.team.goal = Number.isFinite(tg) ? Math.max(10, Math.min(1000, tg)) : 100;
+  next.team.reward = $("#s_tr").value.trim() || DEFAULTS.team.reward;
+  const pin = $("#s_pin").value.trim();
+  if (pin) {
+    if (!/^\d{4}$/.test(pin)) { $("#importMsg").className = "note warn"; $("#importMsg").textContent = "비밀번호는 숫자 4자리로 넣어 주세요."; return; }
+    state.pinHash = await hashPin(pin);
+  }
+  state.cfg = next;
+  save();
+  $("#setVeil").hidden = true;
+  redrawTracks();
+  setStatus(pin ? "설정과 새 비밀번호를 저장했어요" : "설정을 저장했어요");
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  for (const id of ["#pinVeil", "#addVeil", "#setVeil"]) if (!$(id).hidden) { $(id).hidden = true; pinCb = null; break; }
+});
+
+/* ---------- boot ---------- */
+load();
+for (const k of KIDS) buildCard(k);
+refreshLock();
+renderAll();
+if (!storageOk) setStatus("이 브라우저에서는 저장할 수 없어요. 개인정보 보호(비공개) 모드를 끄고 다시 열어 주세요.", true);
+else setStatus(backupNudge() || (state.entries.length ? "" : "처음이에요. 오른쪽 위 설정에서 비밀번호를 만들고 아이들 이름을 넣어 주세요."));
+})();
+</script>
+</body>
+</html>
