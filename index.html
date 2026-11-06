@@ -86,6 +86,27 @@ h1 small{display:block;font-family:var(--body);font-size:12px;font-weight:600;co
 .go.drs{background:var(--purple)}
 .go small{display:block;font-family:var(--body);font-size:12px;font-weight:600;opacity:.9}
 .locked .go{opacity:.55}
+.pitbtn{border:1px dashed var(--line);background:transparent;border-radius:12px;padding:10px;font-weight:700;color:var(--muted)}
+.pitbtn:hover{border-color:var(--muted);color:var(--fg)}
+.pitbox{display:flex;flex-direction:column;gap:10px;background:repeating-linear-gradient(-45deg,#2a2410 0 12px,#211d0d 12px 24px);border:2px solid var(--flag);border-radius:14px;padding:14px}
+.pitbox .ph{font-family:var(--display);font-size:20px;color:var(--flag)}
+.pitbox .pm{font-size:16px;font-weight:700}
+.pitbox .pt{font-family:var(--num);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.pitbox .pt.done{font-family:var(--body);font-size:15px;color:var(--flag)}
+.pitbox .out{border:0;border-radius:12px;padding:14px;font-family:var(--display);font-size:20px;background:var(--flag);color:#111}
+.card.inpit .btns,.card.inpit .pitbtn{display:none}
+.card.inpit svg .carg{opacity:.35}
+.missions{display:flex;flex-direction:column;gap:8px}
+.mission{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--panel-2);border-radius:12px;padding:12px 14px}
+.mission[aria-pressed="true"]{border-color:var(--flag);box-shadow:inset 0 0 0 1px var(--flag)}
+.mission b{display:block;font-size:15px}
+.mission span{font-size:13px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;background:var(--fg);color:#111;border-radius:14px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:calc(100% - 32px);font-weight:700}
+.toast button{border:0;border-radius:10px;padding:10px 14px;background:#111;color:#fff;font-weight:800;white-space:nowrap}
+.toast .bar2{position:absolute;left:12px;right:12px;bottom:4px;height:3px;border-radius:2px;background:#0002;overflow:hidden}
+.toast .bar2 i{display:block;height:100%;background:#111;transform-origin:left;animation:shrink 10s linear forwards}
+@keyframes shrink{to{transform:scaleX(0)}}
+.log li.pitrow .p{color:var(--flag)}
 .trophies{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
 .trophy{background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--fg);font-weight:600}
 .trophy b{color:var(--flag);font-family:var(--num)}
@@ -160,7 +181,7 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}
 .confetti i{position:absolute;top:-20px;width:10px;height:16px;animation:fall 2.6s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
-@media (prefers-reduced-motion:reduce){.confetti{display:none}.go{transition:none}.bar span{transition:none}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.toast .bar2 i{animation:none}.go{transition:none}.bar span{transition:none}}
 </style>
 </head>
 <body>
@@ -223,6 +244,28 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
   </form>
 </div>
 
+<!-- pit-in penalty -->
+<div class="veil" id="pitVeil" hidden>
+  <form class="sheet" id="pitForm" style="--team:var(--flag)">
+    <h3 id="pitTitle">피트인</h3>
+    <p class="note">점수는 그대로예요. 미션을 마치고 피트아웃하기 전까지 +1을 받을 수 없어요.</p>
+    <div class="missions" id="missions"></div>
+    <label for="pitWhy">무슨 일이 있었나요? (선택)
+      <input type="text" id="pitWhy" maxlength="60" placeholder="예: 동생 장난감 뺏음" autocomplete="off">
+    </label>
+    <div>
+      <p class="note" style="margin-bottom:6px">누가 기록하나요?</p>
+      <div class="seg" id="pitBy"></div>
+    </div>
+    <div class="row">
+      <button type="button" class="ghost" id="pitCancel">취소</button>
+      <button type="submit" class="primary" id="pitGo">피트인</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button type="button" id="toastUndo">되돌리기</button><div class="bar2"><i id="toastBar"></i></div></div>
+
 <!-- celebration -->
 <div class="veil" id="celeVeil" hidden>
   <div class="sheet cele" id="celeSheet">
@@ -252,7 +295,7 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
     <label for="s_lap">서킷 한 바퀴 칸 수 (10~60)<input type="number" id="s_lap" min="10" max="60" inputmode="numeric"></label>
     <p class="note">칸 수를 바꾸면 지금까지 모은 포인트는 그대로 두고 위치만 새 칸 수로 다시 계산해요.</p>
     <label for="s_r1">섹터 1 통과 보상<input type="text" id="s_r1" maxlength="60"></label>
-    <label for="s_r2">섹터 2 통과 보상 (피트스톱)<input type="text" id="s_r2" maxlength="60"></label>
+    <label for="s_r2">섹터 2 통과 보상<input type="text" id="s_r2" maxlength="60"></label>
     <label for="s_rw">결승선 우승 보상<input type="text" id="s_rw" maxlength="60"></label>
     <p class="fieldset-title">팀 챔피언십</p>
     <label for="s_tg">두 사람 합계 목표 포인트<input type="number" id="s_tg" min="10" max="1000" inputmode="numeric"></label>
@@ -288,7 +331,7 @@ const DEFAULTS = {
   lapLen: 30,
   rewards: {
     s1: "스티커 1장 또는 10분 더 놀기",
-    s2: "피트스톱: 아빠랑 원하는 놀이 20분",
+    s2: "아빠랑 원하는 놀이 20분",
     win: "원하는 간식이나 미니카 1대"
   },
   team: { goal: 100, reward: "가족 나들이 (어디 갈지 둘이 함께 정하기)" }
@@ -297,7 +340,7 @@ const REASONS = ["착한 일", "정리정돈", "양보·도와주기", "형제 �
 const GIVERS = ["아빠", "엄마"];
 // Stylised circuits (not to scale) — the season calendar, one per lap.
 const CIRCUITS = [
-  { code: "KOR", name: "코리아 영암", pts: [[10,48],[60,50],[88,46],[90,34],[70,30],[62,18],[80,10],[40,8],[30,20],[16,22],[8,34]] },
+  { code: "KOR", name: "코리아 수원 영통", pts: [[10,48],[60,50],[88,46],[90,34],[70,30],[62,18],[80,10],[40,8],[30,20],[16,22],[8,34]] },
   { code: "MON", name: "모나코",     pts: [[12,40],[30,46],[50,52],[78,50],[90,40],[80,30],[86,16],[70,10],[50,16],[40,28],[22,24],[10,30]] },
   { code: "JPN", name: "스즈카",     pts: [[10,30],[24,48],[50,52],[66,40],[80,50],[92,38],[86,18],[62,10],[46,22],[30,12],[14,14]] },
   { code: "GBR", name: "실버스톤",   pts: [[14,46],[40,52],[64,48],[90,44],[86,26],[70,24],[66,10],[42,8],[34,22],[16,18],[8,30]] },
@@ -311,7 +354,23 @@ const $ = (s) => document.querySelector(s);
 const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- storage (this browser only) ---------- */
-let state = { cfg: clone(DEFAULTS), entries: [], pinHash: null, lastBackup: 0 };
+let state = { cfg: clone(DEFAULTS), entries: [], pinHash: null, lastBackup: 0, pit: { a: null, b: null } };
+const MISSIONS = [
+  { key: "cool",  icon: "🧊", name: "타이어 식히기",   desc: "조용히 앉아서 3분 진정하기", min: 3 },
+  { key: "radio", icon: "📻", name: "팀 라디오",       desc: "왜 그랬는지, 다음엔 어떻게 할지 말하기" },
+  { key: "sorry", icon: "🤝", name: "사과하고 안아주기", desc: "속상하게 한 사람에게 사과하기" },
+  { key: "clean", icon: "🧹", name: "트랙 정리",       desc: "어지른 것 직접 치우기" },
+  { key: "help",  icon: "🔧", name: "팀메이트 돕기",   desc: "형제나 가족을 한 가지 도와주기" }
+];
+function cleanPit(p){
+  const out = { a: null, b: null };
+  if (!p || typeof p !== "object") return out;
+  for (const k of KIDS) {
+    const v = p[k];
+    if (v && typeof v === "object" && v.mission) out[k] = { id: String(v.id || ""), mission: String(v.mission).slice(0, 80), at: Number(v.at) || Date.now(), endsAt: Number(v.endsAt) || 0 };
+  }
+  return out;
+}
 let storageOk = true;
 function clone(o){ return JSON.parse(JSON.stringify(o)); }
 function merge(base, over){
@@ -325,9 +384,14 @@ function merge(base, over){
 }
 function cleanEntries(list){
   if (!Array.isArray(list)) return [];
-  return list.filter((e) => e && KIDS.includes(e.kid) && Number(e.pts) > 0 && Number(e.at) > 0)
-    .map((e) => ({ id: String(e.id || (e.at + Math.random())), kid: e.kid, pts: Math.min(5, Math.round(Number(e.pts))),
-                   reason: String(e.reason || "칭찬").slice(0, 80), by: e.by ? String(e.by).slice(0, 10) : "", at: Number(e.at) }));
+  return list.filter((e) => e && KIDS.includes(e.kid) && Number(e.at) > 0 && (e.type === "pit" || Number(e.pts) > 0))
+    .map((e) => {
+      const pit = e.type === "pit";
+      const out = { id: String(e.id || (e.at + Math.random())), kid: e.kid, pts: pit ? 0 : Math.min(5, Math.round(Number(e.pts))),
+                    reason: String(e.reason || (pit ? "피트인" : "칭찬")).slice(0, 80), by: e.by ? String(e.by).slice(0, 10) : "", at: Number(e.at) };
+      if (pit) out.type = "pit";
+      return out;
+    });
 }
 function load(){
   try {
@@ -338,6 +402,7 @@ function load(){
     state.entries = cleanEntries(s.entries);
     state.pinHash = typeof s.pinHash === "string" ? s.pinHash : null;
     state.lastBackup = Number(s.lastBackup) || 0;
+    state.pit = cleanPit(s.pit);
   } catch (e) { storageOk = false; }
 }
 function save(){
@@ -376,7 +441,7 @@ function unlock(){
   lockTimer = setInterval(() => { refreshLock(); if (!isUnlocked()) { clearInterval(lockTimer); renderLog(); } }, 15000);
   refreshLock(); renderLog();
 }
-function lockNow(){ unlockedUntil = 0; clearInterval(lockTimer); refreshLock(); renderLog(); }
+function lockNow(){ unlockedUntil = 0; clearInterval(lockTimer); hideUndo(); refreshLock(); renderLog(); }
 function needUnlock(cb){
   if (isUnlocked()) { unlockedUntil = Date.now() + UNLOCK_MS; refreshLock(); cb(); return; }
   pinCb = cb; pinBuf = "";
@@ -456,20 +521,31 @@ function buildCard(kid){
     </div>
     <div class="trackbox"><svg viewBox="0 0 100 60" role="img"></svg></div>
     <div class="meter"><span class="m1"></span><span class="m2 muted"></span></div>
+    <div class="pitbox" hidden>
+      <div class="ph">🛑 피트인 · 잠깐 멈춤</div>
+      <div class="pm"></div>
+      <div class="pt" hidden></div>
+      <button type="button" class="out">미션 완료 → 피트아웃</button>
+    </div>
     <div class="btns">
       <button type="button" class="go one">+1 칭찬<small>한 칸 전진</small></button>
       <button type="button" class="go drs">+2 DRS<small>아주 큰 칭찬</small></button>
     </div>
+    <button type="button" class="pitbtn">🛑 피트인 (잘못했을 때)</button>
     <div class="trophies"></div>`;
   $("#drivers").appendChild(card);
   const r = {
     card, num: card.querySelector(".num"), name: card.querySelector(".name"), round: card.querySelector(".round"),
     big: card.querySelector(".big"), svg: card.querySelector("svg"), m1: card.querySelector(".m1"),
     m2: card.querySelector(".m2"), one: card.querySelector(".one"), drs: card.querySelector(".drs"),
-    trophies: card.querySelector(".trophies"), lap: -1, len: 0, L: 1, anim: null
+    trophies: card.querySelector(".trophies"), lap: -1, len: 0, L: 1, anim: null,
+    pitbox: card.querySelector(".pitbox"), pm: card.querySelector(".pm"), pt: card.querySelector(".pt"),
+    out: card.querySelector(".out"), pitbtn: card.querySelector(".pitbtn")
   };
   r.one.addEventListener("click", () => needUnlock(() => openAdd(kid, 1)));
   r.drs.addEventListener("click", () => needUnlock(() => openAdd(kid, 2)));
+  r.pitbtn.addEventListener("click", () => needUnlock(() => openPit(kid)));
+  r.out.addEventListener("click", () => needUnlock(() => pitOut(kid)));
   ui[kid] = r;
 }
 
@@ -503,7 +579,7 @@ function drawTrack(kid, lap){
   const fl = el("g", { transform: `translate(${p0.x} ${p0.y}) rotate(${ang})` }, svg);
   for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++)
     el("rect", { x: -0.9 + j*0.9, y: -2.7 + i*0.9, width: 0.9, height: 0.9, fill: (i + j) % 2 ? "#000" : "#fff" }, fl);
-  r.car = el("g", {}, svg);
+  r.car = el("g", { class: "carg" }, svg);
   const body = el("g", {}, r.car);
   el("rect", { x: -3, y: -1.5, width: 0.9, height: 3, rx: 0.2, fill: "#111" }, body);
   el("rect", { x: -2.4, y: -1.9, width: 1.2, height: 0.7, rx: 0.25, fill: "#111" }, body);
@@ -577,13 +653,17 @@ function renderCard(kid, total){
   r.num.textContent = d.number;
   r.name.textContent = d.name;
   r.round.textContent = "";
-  const b = document.createElement("b"); b.textContent = `R${pl.lap + 1} · ${pl.circuit.name}`;
-  r.round.append(b, ` ${pl.circuit.code} · ${pl.lap === 0 ? "첫 레이스" : pl.lap + "번 완주"}`);
+  const b = document.createElement("b"); b.textContent = `R${pl.lap + 1} · F1 ${pl.circuit.name} 그랑프리`;
+  r.round.append(b, pl.lap ? ` · ${pl.lap}번 완주` : " · 첫 레이스");
+  const pit = state.pit[kid];
+  r.card.classList.toggle("inpit", !!pit);
+  r.pitbox.hidden = !pit;
+  if (pit) { r.pm.textContent = `미션: ${pit.mission}`; renderPitTimer(kid); }
   r.big.textContent = total;
   r.m1.textContent = "";
   const nb = document.createElement("b"); nb.textContent = L - pl.pos;
   r.m1.append("결승선까지 ", nb, "칸");
-  r.m2.textContent = pl.pos < s1 ? `섹터 1까지 ${s1 - pl.pos}칸` : pl.pos < s2 ? `섹터 2(피트스톱)까지 ${s2 - pl.pos}칸` : "마지막 섹터, 힘내!";
+  r.m2.textContent = pl.pos < s1 ? `섹터 1까지 ${s1 - pl.pos}칸` : pl.pos < s2 ? `섹터 2까지 ${s2 - pl.pos}칸` : "마지막 섹터, 힘내!";
   r.trophies.textContent = "";
   if (pl.lap === 0) { r.trophies.textContent = "첫 우승을 향해 달리는 중이에요."; return; }
   const lbl = document.createElement("span"); lbl.textContent = "우승 트로피"; r.trophies.appendChild(lbl);
@@ -635,7 +715,9 @@ function renderLog(){
     const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = cfg().drivers[e.kid].color;
     const k = document.createElement("span"); k.className = "k"; k.textContent = cfg().drivers[e.kid].name;
     const r = document.createElement("span"); r.className = "r"; r.textContent = e.reason;
-    const p = document.createElement("span"); p.className = "p"; p.textContent = `+${e.pts}`;
+    const isPit = e.type === "pit";
+    if (isPit) li.className = "pitrow";
+    const p = document.createElement("span"); p.className = "p"; p.textContent = isPit ? "🛑 PIT" : `+${e.pts}`;
     if (e.pts >= 2) p.style.color = "var(--purple)";
     const by = document.createElement("span"); by.className = "by"; by.textContent = e.by || "";
     const t = document.createElement("span"); t.className = "t"; t.textContent = fmtTime(e.at);
@@ -650,8 +732,8 @@ function renderLog(){
           return;
         }
         clearTimeout(timer);
-        state.entries = state.entries.filter((x) => x.id !== e.id);
-        save(); renderAll(); setStatus("기록을 지웠어요");
+        removeEntry(e.id);
+        setStatus("기록을 지웠어요");
       });
       li.appendChild(del);
     }
@@ -680,13 +762,13 @@ function showNextCele(){
   $("#celeSheet").style.setProperty("--team", d.color);
   if (it.ms.kind === "win") {
     const c = CIRCUITS[it.ms.lap % CIRCUITS.length];
-    $("#celeEyebrow").textContent = `R${it.ms.lap + 1} · ${c.code} · 체커기`;
+    $("#celeEyebrow").textContent = `R${it.ms.lap + 1} · F1 ${c.name} 그랑프리 · 체커기`;
     $("#celeTitle").textContent = `${d.name}, ${c.name} 우승!`;
     $("#celeReward").textContent = rw.win;
     confetti(d.color);
   } else if (it.ms.kind === "s2") {
-    $("#celeEyebrow").textContent = "SECTOR 2 · 피트스톱";
-    $("#celeTitle").textContent = `${d.name}, 피트인!`;
+    $("#celeEyebrow").textContent = "SECTOR 2 · 퍼플 섹터";
+    $("#celeTitle").textContent = `${d.name}, 섹터 2 통과!`;
     $("#celeReward").textContent = rw.s2;
   } else {
     $("#celeEyebrow").textContent = "SECTOR 1 · 퍼플 섹터";
@@ -749,14 +831,21 @@ function openAdd(kid, pts){
     });
     chips.appendChild(b);
   }
-  const seg = $("#bySeg"); seg.textContent = "";
+  buildGiverSeg($("#bySeg"), addCtx);
+  $("#addVeil").hidden = false;
+}
+function buildGiverSeg(seg, ctx){
+  seg.textContent = "";
   for (const g of GIVERS) {
     const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = g;
-    b.setAttribute("aria-pressed", String(g === addCtx.by));
-    b.addEventListener("click", () => { addCtx.by = g; seg.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.textContent === g))); });
+    b.setAttribute("aria-pressed", String(g === ctx.by));
+    b.addEventListener("click", () => { ctx.by = g; seg.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.textContent === g))); });
     seg.appendChild(b);
   }
-  $("#addVeil").hidden = false;
+}
+function setGiver(g){
+  lastGiver = g;
+  try { localStorage.setItem(STORE_KEY + ".giver", g); } catch (e) {}
 }
 $("#addCancel").addEventListener("click", () => { $("#addVeil").hidden = true; });
 $("#addForm").addEventListener("submit", (ev) => {
@@ -764,15 +853,105 @@ $("#addForm").addEventListener("submit", (ev) => {
   if (!addCtx) return;
   const txt = $("#addReason").value.trim();
   const reason = [addCtx.chip, txt].filter(Boolean).join(" · ") || "칭찬";
-  const now = Date.now();
-  state.entries.push({ id: now.toString(36) + Math.random().toString(36).slice(2, 6), kid: addCtx.kid, pts: addCtx.pts, reason, by: addCtx.by, at: now });
-  lastGiver = addCtx.by;
-  try { localStorage.setItem(STORE_KEY + ".giver", lastGiver); } catch (e) {}
   $("#addVeil").hidden = true;
+  if (state.pit[addCtx.kid]) { setStatus(`${cfg().drivers[addCtx.kid].name}는 피트인 중이라 기록하지 않았어요. 피트아웃 후 다시 눌러 주세요.`, true); return; }
+  const now = Date.now(), id = newId(now);
+  state.entries.push({ id, kid: addCtx.kid, pts: addCtx.pts, reason, by: addCtx.by, at: now });
+  setGiver(addCtx.by);
   save();
   if (storageOk) setStatus(backupNudge());
   renderAll();
+  showUndo(`${cfg().drivers[addCtx.kid].name} +${addCtx.pts} 기록했어요`, id);
 });
+
+function newId(now){ return now.toString(36) + Math.random().toString(36).slice(2, 6); }
+function removeEntry(id){
+  const e = state.entries.find((x) => x.id === id);
+  if (!e) return false;
+  state.entries = state.entries.filter((x) => x.id !== id);
+  if (e.type === "pit" && state.pit[e.kid] && state.pit[e.kid].id === id) state.pit[e.kid] = null;
+  save(); renderAll();
+  return true;
+}
+
+/* ---------- undo toast ---------- */
+let toastId = null, toastTimer = null;
+function showUndo(msg, id){
+  toastId = id;
+  $("#toastMsg").textContent = msg;
+  const bar = $("#toastBar"); bar.style.animation = "none"; void bar.offsetWidth; bar.style.animation = "";
+  $("#toast").hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(hideUndo, 10000);
+}
+function hideUndo(){ $("#toast").hidden = true; toastId = null; clearTimeout(toastTimer); }
+$("#toastUndo").addEventListener("click", () => {
+  const id = toastId;
+  if (!id) return hideUndo();
+  needUnlock(() => {
+    const ok = removeEntry(id);
+    hideUndo();
+    // drop any sector/finish popup the undone points triggered
+    celeQueue.length = 0; $("#celeVeil").hidden = true;
+    setStatus(ok ? "방금 기록을 되돌렸어요" : "");
+  });
+});
+
+/* ---------- pit-in penalty ---------- */
+let pitCtx = null;
+function openPit(kid){
+  pitCtx = { kid, mission: MISSIONS[0], by: lastGiver };
+  buildGiverSeg($("#pitBy"), pitCtx);
+  $("#pitTitle").textContent = `${cfg().drivers[kid].name} 피트인`;
+  $("#pitWhy").value = "";
+  const box = $("#missions"); box.textContent = "";
+  for (const m of MISSIONS) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "mission";
+    b.setAttribute("aria-pressed", String(m === pitCtx.mission));
+    const t = document.createElement("b"); t.textContent = `${m.icon} ${m.name}`;
+    const d = document.createElement("span"); d.textContent = m.desc;
+    const w = document.createElement("div"); w.append(t, d); b.appendChild(w);
+    b.addEventListener("click", () => { pitCtx.mission = m; box.querySelectorAll(".mission").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); });
+    box.appendChild(b);
+  }
+  $("#pitVeil").hidden = false;
+}
+$("#pitCancel").addEventListener("click", () => { $("#pitVeil").hidden = true; });
+$("#pitForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (!pitCtx) return;
+  const { kid, mission } = pitCtx, now = Date.now(), id = newId(now);
+  const why = $("#pitWhy").value.trim();
+  state.pit[kid] = { id, mission: `${mission.name}: ${mission.desc}`, at: now, endsAt: mission.min ? now + mission.min * 60000 : 0 };
+  state.entries.push({ id, type: "pit", kid, pts: 0, reason: `${why || "피트인"} → ${mission.name}`, by: pitCtx.by, at: now });
+  setGiver(pitCtx.by);
+  $("#pitVeil").hidden = true;
+  save(); renderAll(); startPitTick();
+  showUndo(`${cfg().drivers[kid].name} 피트인`, id);
+});
+function pitOut(kid){
+  if (!state.pit[kid]) return;
+  state.pit[kid] = null;
+  save(); renderAll();
+  setStatus(`${cfg().drivers[kid].name} 피트아웃! 다시 달려요`);
+}
+function renderPitTimer(kid){
+  const r = ui[kid], p = state.pit[kid];
+  if (!p || !p.endsAt) { r.pt.hidden = true; return; }
+  r.pt.hidden = false;
+  const left = Math.ceil((p.endsAt - Date.now()) / 1000);
+  if (left > 0) { r.pt.classList.remove("done"); r.pt.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`; }
+  else { r.pt.classList.add("done"); r.pt.textContent = "⏱ 시간 끝! 아빠·엄마가 피트아웃을 눌러 주세요"; }
+}
+let pitTick = null;
+function startPitTick(){
+  clearInterval(pitTick);
+  pitTick = setInterval(() => {
+    let any = false;
+    for (const k of KIDS) { const p = state.pit[k]; if (p && p.endsAt) { renderPitTimer(k); if (p.endsAt > Date.now()) any = true; } }
+    if (!any) clearInterval(pitTick);
+  }, 1000);
+}
 
 /* ---------- backup ---------- */
 function backupNudge(){
@@ -789,7 +968,7 @@ function backupInfo(){
 }
 $("#btnExport").addEventListener("click", async () => {
   const d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
-  const data = JSON.stringify({ app: "praise-grand-prix", version: 1, exportedAt: d.toISOString(), cfg: state.cfg, entries: state.entries }, null, 1);
+  const data = JSON.stringify({ app: "praise-grand-prix", version: 2, exportedAt: d.toISOString(), cfg: state.cfg, entries: state.entries, pit: state.pit }, null, 1);
   const name = `praise-grand-prix-backup-${stamp}.json`;
   const file = new File([data], name, { type: "application/json" });
   let ok = false;
@@ -817,7 +996,8 @@ $("#importFile").addEventListener("change", async (ev) => {
     const added = incoming.filter((e) => !have.has(e.id));
     state.entries = state.entries.concat(added);
     if (s.cfg) state.cfg = merge(DEFAULTS, s.cfg);
-    save(); redrawTracks(); fillSettings();
+    if (s.pit) { const ip = cleanPit(s.pit); for (const k of KIDS) if (!state.pit[k] && ip[k]) state.pit[k] = ip[k]; }
+    save(); redrawTracks(); fillSettings(); startPitTick();
     msg.className = "note"; msg.textContent = `불러왔어요. 새 기록 ${added.length}건을 더했고, 이미 있던 기록은 그대로 뒀어요.`;
   } catch (e) {
     msg.className = "note warn"; msg.textContent = "칭찬 그랑프리 백업 파일이 아니에요. '백업 파일 저장'으로 만든 .json 파일을 골라 주세요.";
@@ -871,7 +1051,7 @@ $("#setForm").addEventListener("submit", async (ev) => {
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  for (const id of ["#pinVeil", "#addVeil", "#setVeil"]) if (!$(id).hidden) { $(id).hidden = true; pinCb = null; break; }
+  for (const id of ["#pinVeil", "#addVeil", "#pitVeil", "#setVeil"]) if (!$(id).hidden) { $(id).hidden = true; pinCb = null; break; }
 });
 
 /* ---------- boot ---------- */
@@ -879,6 +1059,7 @@ load();
 for (const k of KIDS) buildCard(k);
 refreshLock();
 renderAll();
+startPitTick();
 if (!storageOk) setStatus("이 브라우저에서는 저장할 수 없어요. 개인정보 보호(비공개) 모드를 끄고 다시 열어 주세요.", true);
 else setStatus(backupNudge() || (state.entries.length ? "" : "처음이에요. 오른쪽 위 설정에서 비밀번호를 만들고 아이들 이름을 넣어 주세요."));
 })();
