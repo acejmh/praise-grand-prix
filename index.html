@@ -101,6 +101,39 @@ h1 small{display:block;font-family:var(--body);font-size:12px;font-weight:600;co
 @keyframes blink{50%{opacity:.55}}
 .card.inpit svg .carg{opacity:.55}
 .pitbtn:disabled{opacity:.4;cursor:not-allowed}
+/* damage ladder */
+.ladder{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.ladder li{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px 6px;border-radius:10px;background:rgba(0,0,0,.28);color:var(--muted);font-size:11px;font-weight:700;line-height:1.1;text-align:center;position:relative}
+.ladder svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ladder li.ok{opacity:.5}
+.ladder li.broken{color:#14161b;background:var(--flag)}
+.ladder li.top{box-shadow:0 0 0 2px var(--fg),0 6px 16px rgba(0,0,0,.35);animation:nudge 1.8s cubic-bezier(.22,1,.36,1) infinite}
+.ladder .dots{font-style:normal;font-size:10px;letter-spacing:1px}
+@keyframes nudge{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-3px)}}
+.go.charge{width:100%;background:#27f4d2;color:#14161b;box-shadow:inset 0 -5px 0 #14161b33}
+.go.locked{background:repeating-linear-gradient(-45deg,#3a2f5c 0 10px,#2d2547 10px 20px);color:#c9bdf0;cursor:not-allowed}
+.card.flagged .pitbox{border-color:var(--fg);background:repeating-linear-gradient(-45deg,#1b1d23 0 12px,#121318 12px 24px)}
+.card.flagged .ph{color:var(--fg)}
+.card.inpit svg .carg.dead{opacity:.3}
+/* pit-box drawing life */
+.tyres .smoke circle{transform-box:fill-box;transform-origin:center;animation:puff 2.4s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes puff{0%{transform:translateY(4px) scale(.7);opacity:.55}100%{transform:translateY(-16px) scale(1.5);opacity:0}}
+.tyres .spark{animation:twinkle 1.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.35}50%{opacity:1}}
+.tyres .bflag{transform-box:fill-box;transform-origin:left center;animation:wave 1.8s ease-in-out infinite}
+@keyframes wave{0%,100%{transform:skewY(0deg) scaleX(1)}50%{transform:skewY(5deg) scaleX(.94)}}
+.tyres .batt-low{animation:twinkle 1.4s ease-in-out infinite}
+.tyres .ring{animation:march 1.2s linear infinite}
+@keyframes march{to{stroke-dashoffset:-18}}
+.tyres .carbody.dead{filter:saturate(.25) brightness(.75)}
+.tyres .flap{transform-box:fill-box;transform-origin:top center;animation:dangle 2.6s ease-in-out infinite}
+@keyframes dangle{0%,100%{transform:rotate(0deg)}50%{transform:rotate(4deg)}}
+/* night crew note */
+.night{display:flex;align-items:center;gap:14px;background:var(--panel);border:2px solid #27f4d2;border-radius:18px;padding:12px 16px}
+.night-art{width:52px;height:52px;flex:none}
+.night-text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.night-text b{font-size:16px}
+.night-text span{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:15;background:var(--fg);color:#111;border-radius:14px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.5);max-width:calc(100% - 32px);font-weight:700}
 .toast button{border:0;border-radius:10px;padding:10px 14px;background:#111;color:#fff;font-weight:800;white-space:nowrap}
 .toast .bar2{position:absolute;left:12px;right:12px;bottom:4px;height:3px;border-radius:2px;background:#0002;overflow:hidden}
@@ -191,7 +224,7 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:25;overflow:hidden}
 .confetti i{position:absolute;top:-20px;width:10px;height:16px;animation:fall 2.6s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
-@media (prefers-reduced-motion:reduce){.tyres .jack{animation:none}.confetti{display:none}.toast .bar2 i{animation:none}.go{transition:none}.bar span{transition:none}}
+@media (prefers-reduced-motion:reduce){.tyres .jack,.tyres .smoke circle,.tyres .spark,.tyres .bflag,.tyres .batt-low,.tyres .ring,.tyres .flap,.ladder li.top{animation:none}.confetti{display:none}.toast .bar2 i{animation:none}.go{transition:none}.bar span{transition:none}}
 </style>
 </head>
 <body>
@@ -205,6 +238,12 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
     <button class="ghost" id="btnSettings" type="button">설정</button>
     <span class="status" id="status"></span>
   </header>
+
+  <section class="night" id="night" hidden aria-live="polite">
+    <svg class="night-art" viewBox="0 0 64 64" aria-hidden="true"><circle cx="46" cy="16" r="9" fill="#ffd400"/><circle cx="50" cy="13" r="8" style="fill:var(--panel)"/><path d="M14 44 l14 -14 a7 7 0 1 1 6 6 l-14 14 a4 4 0 0 1 -6 -6 Z" fill="none" stroke="#27f4d2" stroke-width="3.2" stroke-linejoin="round"/><circle cx="33" cy="29" r="3" fill="#27f4d2"/></svg>
+    <div class="night-text"><b id="nightTitle">밤사이 정비팀이 다녀갔어요</b><span id="nightBody"></span></div>
+    <button type="button" class="ghost" id="nightOk">확인</button>
+  </section>
 
   <main class="grid" id="drivers" aria-label="드라이버"></main>
 
@@ -276,6 +315,23 @@ input[type=color]{width:100%;height:42px;border:1px solid var(--line);border-rad
     <div class="row">
       <button type="button" class="ghost" id="pitCancel">취소</button>
       <button type="submit" class="primary" id="pitGo">바퀴 빼기</button>
+    </div>
+  </form>
+</div>
+
+<!-- 충전 미션 -->
+<div class="veil" id="chargeVeil" hidden>
+  <form class="sheet" id="chargeForm" style="--team:#27f4d2;--on-team:#14161b">
+    <h3 id="chargeTitle">충전 미션</h3>
+    <p class="note">미션을 마쳤으면 배터리를 채워요. 블랙 플래그가 풀리고 DRS 수리부터 다시 시작해요.</p>
+    <div class="chips" id="chargeChips"></div>
+    <div>
+      <p class="note" style="margin-bottom:6px">누가 확인했나요?</p>
+      <div class="seg" id="chargeBy"></div>
+    </div>
+    <div class="row">
+      <button type="button" class="ghost" id="chargeCancel">취소</button>
+      <button type="submit" class="primary" id="chargeGo">충전 완료</button>
     </div>
   </form>
 </div>
@@ -384,7 +440,7 @@ const $ = (s) => document.querySelector(s);
 const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ---------- storage (this browser only) ---------- */
-const SCHEMA = 4;
+const SCHEMA = 5; // 5: damage ladder (brk, recharge)
 let state = { schema: SCHEMA, cfg: clone(DEFAULTS), entries: [], pinHash: null, lastBackup: 0 };
 // Tyre penalty: each "바퀴 빼기" takes one tyre off (max 4) and the car sits in the pit;
 // each praise while in the pit fits one new tyre instead of moving. All 4 back on = pit exit.
@@ -393,20 +449,56 @@ const TYRES = [
   { key: "fl", label: "앞 왼쪽" }, { key: "fr", label: "앞 오른쪽" },
   { key: "rl", label: "뒤 왼쪽" }, { key: "rr", label: "뒤 오른쪽" }
 ];
-const ZERO_TYPES = ["pit", "tyreoff", "tyreon"];
-// Replays the tyre log. A tyreon unit that finds no missing tyre (e.g. its 바퀴 빼기 row was
-// deleted later) is handed back as a normal point in `bonus`, so a mistaken penalty never eats praise.
-function tyreReplay(kid){
-  let off = 0, bonus = 0;
-  const list = state.entries.filter((e) => e.kid === kid && (e.type === "tyreoff" || e.type === "tyreon")).sort((a, b) => a.at - b.at);
+const ZERO_TYPES = ["pit", "tyreoff", "tyreon", "recharge"];
+// Damage ladder. Each "고장" row (stored as type "tyreoff" for backward compatibility) breaks the next part;
+// rows made before the ladder (no `brk`) only ever take tyres off, as they did then. Praise while broken
+// (type "tyreon", n units) repairs from the top down; the flat battery comes back with a 충전 미션 (type
+// "recharge") or overnight. Every midnight after AUTO_REPAIR_FROM the night crew fixes one stage for free.
+const STAGES = [
+  null,
+  { key: "fl", name: "앞 왼쪽 바퀴", short: "바퀴", cost: 1 },
+  { key: "fr", name: "앞 오른쪽 바퀴", short: "바퀴", cost: 1 },
+  { key: "rl", name: "뒤 왼쪽 바퀴", short: "바퀴", cost: 1 },
+  { key: "rr", name: "뒤 오른쪽 바퀴", short: "바퀴", cost: 1 },
+  { key: "wing", name: "앞날개", short: "앞날개", cost: 2 },
+  { key: "drs", name: "DRS", short: "DRS", cost: 2 },
+  { key: "battery", name: "배터리", short: "배터리", cost: 0 }
+];
+const MAX_STAGE = 7;
+const AUTO_REPAIR_FROM = new Date(2026, 10, 26).getTime(); // first night crew shift: the midnight starting 2026-11-26
+function nextMidnight(t){ const d = new Date(t); d.setHours(24, 0, 0, 0); return d.getTime(); }
+// Replays one kid's damage log up to `until`. Praise units that find nothing to repair, and partial repairs
+// the night crew finishes for free, come back as normal points in `bonus`, so a penalty never eats praise.
+function damageReplay(kid, until){
+  const end = until === undefined ? Date.now() : until;
+  let level = 0, bonus = 0, lastT = null;
+  const prog = new Array(MAX_STAGE + 1).fill(0), nights = [];
+  const overnight = (from, to) => {
+    if (from === null || level === 0) return;
+    for (let m = nextMidnight(from); m <= to && level > 0; m = nextMidnight(m)) {
+      if (m < AUTO_REPAIR_FROM) continue;
+      nights.push({ at: m, stage: level, refund: prog[level] });
+      bonus += prog[level]; prog[level] = 0; level--;
+    }
+  };
+  const list = state.entries.filter((e) => e.kid === kid && (e.type === "tyreoff" || e.type === "tyreon" || e.type === "recharge")).sort((a, b) => a.at - b.at);
   for (const e of list) {
-    if (e.type === "tyreoff") { off = Math.min(4, off + 1); continue; }
-    const k = e.n || 1, used = Math.min(off, k);
-    off -= used; bonus += k - used;
+    overnight(lastT, e.at); lastT = e.at;
+    if (e.type === "tyreoff") { if (level < (e.brk ? MAX_STAGE : 4)) { level++; prog[level] = 0; } continue; }
+    if (e.type === "recharge") { if (level === MAX_STAGE) level--; continue; }
+    let units = e.n || 1;
+    while (units > 0 && level > 0 && level < MAX_STAGE) {
+      const use = Math.min(units, STAGES[level].cost - prog[level]);
+      prog[level] += use; units -= use;
+      if (prog[level] >= STAGES[level].cost) { prog[level] = 0; level--; }
+    }
+    bonus += units;
   }
-  return { off, bonus };
+  overnight(lastT, end);
+  return { level, prog: level ? prog[level] : 0, bonus, nights };
 }
-function tyresOff(kid){ return tyreReplay(kid).off; }
+function damage(kid){ return damageReplay(kid); }
+function tyresOff(kid){ return Math.min(4, damage(kid).level); }
 // v3 kept an active mission pit in state.pit; turn it into one missing tyre so nobody silently leaves the pit.
 function migratePit(p){
   const ip = cleanPit(p);
@@ -462,6 +554,7 @@ function cleanEntries(list){
       if (zero) out.type = e.type;
       if (e.type === "tyreon") out.n = Math.max(1, Math.min(4, Math.round(Number(e.n) || 1)));
       if (e.g) out.g = String(e.g).slice(0, 40);
+      if (e.type === "tyreoff" && e.brk) out.brk = 1;
       return out;
     });
 }
@@ -564,7 +657,7 @@ function setStatus(t, warn){ const s = $("#status"); s.textContent = t || ""; s.
 function totals(){
   const t = { a: 0, b: 0 };
   for (const e of state.entries) t[e.kid] += e.pts;
-  for (const k of KIDS) t[k] += tyreReplay(k).bonus;
+  for (const k of KIDS) t[k] += damageReplay(k).bonus;
   return t;
 }
 function place(total){ const L = lapLen(), lap = Math.floor(total / L); return { lap, pos: total % L, circuit: CIRCUITS[lap % CIRCUITS.length] }; }
@@ -602,14 +695,16 @@ function buildCard(kid){
     <div class="meter"><span class="m1"></span><span class="m2 muted"></span></div>
     <div class="pitbox" hidden>
       <div class="ph"></div>
+      <ol class="ladder" aria-label="고장 단계"></ol>
       <div class="tyres"></div>
-      <div class="pm">+1 칭찬은 새 타이어 1개, +2 DRS 는 2개를 끼워요. 4개 다 끼우면 다시 출발!</div>
+      <div class="pm"></div>
     </div>
     <div class="btns">
       <button type="button" class="go one">+1 칭찬<small>한 칸 전진</small></button>
       <button type="button" class="go drs">+2 DRS<small>아주 큰 칭찬</small></button>
     </div>
-    <button type="button" class="pitbtn">🔧 바퀴 빼기 (말 안 들을 때)</button>
+    <button type="button" class="go charge" hidden>충전 미션 완료<small>배터리를 채우고 블랙 플래그 해제</small></button>
+    <button type="button" class="pitbtn"></button>
     <div class="trophies"></div>`;
   $("#drivers").appendChild(card);
   const r = {
@@ -618,10 +713,15 @@ function buildCard(kid){
     m2: card.querySelector(".m2"), one: card.querySelector(".one"), drs: card.querySelector(".drs"),
     trophies: card.querySelector(".trophies"), lap: -1, len: 0, L: 1, anim: null,
     pitbox: card.querySelector(".pitbox"), ph: card.querySelector(".ph"), tyres: card.querySelector(".tyres"),
-    pitbtn: card.querySelector(".pitbtn"), tyreEls: []
+    pm: card.querySelector(".pm"), ladder: card.querySelector(".ladder"), charge: card.querySelector(".charge"),
+    btns: card.querySelector(".btns"), pitbtn: card.querySelector(".pitbtn"), tyreEls: []
   };
   r.one.addEventListener("click", () => needUnlock(() => openAdd(kid, 1)));
-  r.drs.addEventListener("click", () => needUnlock(() => openAdd(kid, 2)));
+  r.drs.addEventListener("click", () => {
+    if (r.drs.classList.contains("locked")) { setStatus(`${cfg().drivers[kid].name}의 DRS 가 고장 났어요. DRS 수리가 끝나면 +2 를 다시 쓸 수 있어요.`, true); return; }
+    needUnlock(() => openAdd(kid, 2));
+  });
+  r.charge.addEventListener("click", () => needUnlock(() => openCharge(kid)));
   r.pitbtn.addEventListener("click", () => needUnlock(() => openPit(kid)));
   ui[kid] = r;
 }
@@ -723,6 +823,7 @@ function drawTrack(kid, lap){
 }
 function applyTyres(kid, off = tyresOff(kid)){
   const r = ui[kid];
+  r.car.classList.toggle("dead", damage(kid).level >= MAX_STAGE);
   r.tyreEls.forEach((t, i) => t.setAttribute("visibility", i < off ? "hidden" : "visible"));
   r.hubEls.forEach((h, i) => h.setAttribute("visibility", i < off ? "visible" : "hidden"));
 }
@@ -743,9 +844,35 @@ function tyreTop(x, y, w, h, extra){
   s += `<rect x="${x - w / 2 + 3}" y="${y + h / 2 - 4.2}" width="${w - 6}" height="2.2" rx="1" fill="#ffd400"/></g>`;
   return s;
 }
-function pitCarSvg(kid, off, highlight){
+// A smoke puff column and a few sparks at (x,y): CSS animates them, reduced motion keeps them still.
+function puffs(x, y, n, fid){
+  let s = `<g class="smoke" filter="url(#${fid})">`;
+  for (let i = 0; i < n; i++) s += `<circle cx="${x + (i % 2 ? 5 : -4)}" cy="${y - i * 8}" r="${4 + i * 1.6}" fill="#e4e7ec" opacity="${(0.34 - i * 0.07).toFixed(2)}" style="animation-delay:${(i * 0.6).toFixed(2)}s"/>`;
+  return s + `</g>`;
+}
+function sparks(x, y){
+  return `<g class="spark" transform="translate(${x} ${y})"><path d="M0 -9 L2 -2 L9 0 L2 2 L0 9 L-2 2 L-9 0 L-2 -2 Z" fill="#ffd400"/><path d="M12 -12 l1.4 4 l4 1.4 l-4 1.4 l-1.4 4 l-1.4 -4 l-4 -1.4 l4 -1.4 Z" fill="#ffb347"/></g>`;
+}
+function padlock(x, y){
+  return `<g transform="translate(${x} ${y})"><path d="M-6 -2 V-7 a6 6 0 0 1 12 0 V-2" fill="none" stroke="#f3f4f6" stroke-width="2.4"/><rect x="-9" y="-3" width="18" height="14" rx="3" fill="#ffd400"/><circle cx="0" cy="3" r="2" fill="#14161b"/><rect x="-0.9" y="3" width="1.8" height="5" fill="#14161b"/></g>`;
+}
+function batteryIcon(x, y, dead){
+  // a big friendly battery: empty with a crossed bolt when dead
+  let s = `<g transform="translate(${x} ${y})"><rect x="-26" y="-14" width="48" height="28" rx="6" fill="#1b1d23" stroke="${dead ? "#ff8000" : "#27f4d2"}" stroke-width="3"/><rect x="22" y="-6" width="6" height="12" rx="2" fill="${dead ? "#ff8000" : "#27f4d2"}"/>`;
+  if (dead) s += `<rect class="batt-low" x="-21" y="-9" width="7" height="18" rx="2" fill="#ff8000"/><path d="M2 -9 L-6 2 H0 L-3 10 L6 -2 H0 Z" fill="#9aa0ab"/><line x1="-12" y1="10" x2="14" y2="-10" stroke="#ff8000" stroke-width="2.6" stroke-linecap="round"/>`;
+  return s + `</g>`;
+}
+function blackFlag(x, y){
+  return `<g transform="translate(${x} ${y})"><rect x="-2" y="0" width="3.5" height="54" rx="1.5" fill="#c9cdd4"/><g class="bflag"><path d="M1.5 1 H40 Q36 12 40 22 H1.5 Z" fill="#0b0c0f" stroke="#f3f4f6" stroke-width="1.4"/></g></g>`;
+}
+/* Big top-down pit-box car at damage `level` (0-7). `next` previews the stage about to break (0 = none). */
+function pitCarSvg(kid, level, next){
   const d = cfg().drivers[kid], c = d.color, a = d.accent || d.color;
-  let s = `<svg viewBox="-10 -64 260 258" role="img" aria-label="바퀴 ${off}개가 빠진 차">`;
+  const show = Math.max(level, next || 0), off = Math.min(4, show);
+  const wing = show >= 5, drs = show >= 6, dead = show >= 7;
+  const fid = `soft-${kid}-${level}-${next || 0}`; // filter ids must be unique: several pit drawings share the page
+  let s = `<svg viewBox="-10 -64 260 258" role="img" aria-label="고장 ${show}단계인 차">`;
+  s += `<defs><filter id="${fid}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter></defs>`;
   s += `<rect x="-10" y="-64" width="260" height="258" fill="#1b1d23"/>`;
   s += `<rect x="-10" y="58" width="260" height="14" fill="#ffffff08"/>`; // pit box lane marking
   // suspension arms
@@ -758,23 +885,60 @@ function pitCarSvg(kid, off, highlight){
     s += `<rect x="${wh.cx - 3}" y="${wh.side < 0 ? wh.cy : wh.cy - 14}" width="6" height="14" fill="#8a8f99"/>`; // axle stub
     s += `<circle cx="${wh.cx}" cy="${wh.cy}" r="9" fill="#5c616b" stroke="#ff9a3c" stroke-width="2.5"/><circle cx="${wh.cx}" cy="${wh.cy}" r="4" fill="#c9cdd4"/><circle cx="${wh.cx}" cy="${wh.cy}" r="1.6" fill="#33363d"/>`;
     s += tyreTop(fx, fy, wh.w, wh.h, `transform="rotate(${wh.side * 24} ${fx} ${fy})" opacity=".95"`);
-    // label on the far side of the floor tyre, centred on it (front and rear labels sit apart in x)
-    const lx = highlight === i ? Math.max(Math.min(fx, 172), 64) : fx; // keep the longer label inside the box
-    s += `<text x="${lx}" y="${fy + wh.side * 26}" text-anchor="middle" dominant-baseline="central" class="pit-off${highlight === i ? " now" : ""}">${highlight === i ? "이번에 뺄 바퀴 · " : ""}${TYRES[i].label}</text>`;
+    const now = next === i + 1;
+    const lx = now ? Math.max(Math.min(fx, 172), 64) : fx; // keep the longer label inside the box
+    s += `<text x="${lx}" y="${fy + wh.side * 26}" text-anchor="middle" dominant-baseline="central" class="pit-off${now ? " now" : ""}">${now ? "이번에 뺄 바퀴 · " : ""}${TYRES[i].label}</text>`;
   });
-  // body
-  s += `<rect x="20" y="30" width="20" height="70" rx="4" fill="${a}"/>`; // rear wing
+  s += `<g class="${dead ? "carbody dead" : "carbody"}">`;
+  // rear wing: whole, or (DRS broken) the flap swung open, hanging on one bolt, with a padlock on it
+  const edge = `stroke="#ffffff66" stroke-width="1.4"`; // keeps dark liveries readable on the dark floor
+  if (!drs) s += `<rect x="20" y="30" width="20" height="70" rx="4" fill="${a}" ${edge}/>`;
+  else s += `<rect x="20" y="30" width="9" height="70" rx="3" fill="${a}" ${edge}/><g class="flap"><rect x="27" y="34" width="9" height="62" rx="3" fill="${a}" opacity=".8" ${edge} transform="rotate(-16 31 34)"/></g><circle cx="31" cy="34" r="2.6" fill="#c9cdd4"/>${padlock(12, 66)}${next === 6 ? "" : sparks(44, 98)}`;
   s += `<path d="M36 50 L90 40 L160 44 L214 58 L222 65 L214 72 L160 86 L90 90 L36 80 Z" fill="${c}" stroke="#ffffff55" stroke-width="1.5"/>`;
   s += `<path d="M84 46 L150 50 L150 80 L84 84 Q76 65 84 46 Z" fill="${c}" stroke="#00000033" stroke-width="1.5"/>`; // sidepods
   s += `<rect x="40" y="62" width="176" height="6" rx="3" fill="${a}"/>`; // stripe
   s += `<ellipse cx="128" cy="65" rx="16" ry="9" fill="#0d0e11"/><circle cx="124" cy="65" r="6" fill="${a}" stroke="#fff" stroke-width="1.2"/>`; // cockpit + helmet
-  s += `<rect x="212" y="26" width="14" height="78" rx="4" fill="${a}"/>`; // front wing
-  // number on the sidepod, clear of the accent stripe so it reads against the body colour
+  // front wing: whole, or (broken) the top half snapped off and lying by the nose, smoke at the break
+  if (!wing) s += `<rect x="212" y="26" width="14" height="78" rx="4" fill="${a}" ${edge}/>`;
+  else s += `<path d="M212 70 L215.5 64 L219 70 L222.5 62 L226 67 V100 a4 4 0 0 1 -4 4 H216 a4 4 0 0 1 -4 -4 Z" fill="${a}" ${edge}/>` +
+    `<g transform="translate(229 4) rotate(22)"><path d="M-7 -20 a4 4 0 0 1 4 -4 H3 a4 4 0 0 1 4 4 V14 L3.5 19 L0 13 L-3.5 20 L-7 14 Z" fill="${a}" ${edge}/></g>` +
+    `<rect x="230" y="44" width="5" height="3" rx="1" fill="${a}" transform="rotate(20 232 45)"/><rect x="240" y="52" width="4" height="3" rx="1" fill="${a}"/>` +
+    `${puffs(219, 58, 3, fid)}${sparks(226, 64)}`;
   s += `<text x="104" y="54" text-anchor="middle" dominant-baseline="central" class="pit-num" style="fill:${onColor(c)}">${Number(d.number) || 0}</text>`;
+  s += `</g>`;
+  // flat battery and the black flag: the race is over for today
+  if (dead) s += batteryIcon(125, 150, true) + blackFlag(105, -60) + puffs(70, 54, 3, fid);
+  // the part about to break, ringed
+  if (next === 5) s += `<rect x="206" y="20" width="26" height="90" rx="8" fill="none" stroke="#f3f4f6" stroke-width="2" stroke-dasharray="5 4" class="ring"/>`;
+  if (next === 6) s += `<rect x="14" y="24" width="32" height="82" rx="8" fill="none" stroke="#f3f4f6" stroke-width="2" stroke-dasharray="5 4" class="ring"/>`;
   return s + `</svg>`;
 }
-function drawTyreRow(box, off, kid, highlight){
-  box.innerHTML = pitCarSvg(kid, off, highlight);
+function drawTyreRow(box, level, kid, next){
+  box.innerHTML = pitCarSvg(kid, level, next);
+}
+// Small line icons for the ladder, one stroke weight, drawn not emoji.
+const STAGE_ICON = {
+  tyre: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="4"/><path d="M6 8h12M6 12h12M6 16h12"/></svg>`,
+  wing: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15h18M5 15c1-4 4-6 7-6s6 2 7 6M12 9v-4"/></svg>`,
+  drs: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h16M6 18V8h12v10M6 8l6-4 6 4"/></svg>`,
+  battery: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M11 8.5 8 12.5h4l-3 4"/></svg>`
+};
+function renderLadder(ol, st){
+  ol.textContent = "";
+  for (let k = 1; k <= MAX_STAGE; k++) {
+    const g = STAGES[k], li = document.createElement("li");
+    const icon = k <= 4 ? "tyre" : g.key;
+    li.className = k <= st.level ? (k === st.level ? "broken top" : "broken") : "ok";
+    li.innerHTML = STAGE_ICON[icon];
+    const lab = document.createElement("span"); lab.textContent = g.short; li.appendChild(lab);
+    if (k === st.level && g.cost === 2) {
+      const dots = document.createElement("i"); dots.className = "dots";
+      dots.textContent = "●".repeat(st.prog) + "○".repeat(2 - st.prog);
+      dots.setAttribute("aria-label", `수리 ${st.prog}/2`); li.appendChild(dots);
+    }
+    li.title = `${k}단계 · ${g.name}`;
+    ol.appendChild(li);
+  }
 }
 
 function setCar(kid, len){
@@ -838,14 +1002,27 @@ function renderCard(kid, total){
   const N = CIRCUITS.length, season = Math.floor(pl.lap / N) + 1;
   const b = document.createElement("b"); b.textContent = `${season > 1 ? `시즌${season} ` : ""}R${(pl.lap % N) + 1} · ${pl.circuit.name} 그랑프리`;
   r.round.append(b, ` · ${pl.circuit.venue} · ${pl.lap ? `총 ${pl.lap}번 완주` : "첫 레이스"}`);
-  const off = tyresOff(kid);
-  r.card.classList.toggle("inpit", off > 0);
-  r.pitbox.hidden = off === 0;
-  if (off) { r.ph.textContent = `🛑 피트인 · 바퀴 ${off}개 빠짐`; drawTyreRow(r.tyres, off, kid); }
-  r.one.innerHTML = off ? "+1 칭찬<small>새 타이어 1개</small>" : "+1 칭찬<small>한 칸 전진</small>";
-  r.drs.innerHTML = off >= 2 ? "+2 DRS<small>새 타이어 2개</small>" : off === 1 ? "+2 DRS<small>타이어 1개 + 1칸</small>" : "+2 DRS<small>아주 큰 칭찬</small>";
-  r.pitbtn.disabled = off >= 4;
-  r.pitbtn.textContent = off >= 4 ? "🔧 바퀴 4개가 다 빠졌어요" : "🔧 바퀴 빼기 (말 안 들을 때)";
+  const st = damage(kid), lv = st.level, off = Math.min(4, lv);
+  r.card.classList.toggle("inpit", lv > 0);
+  r.card.classList.toggle("flagged", lv >= MAX_STAGE);
+  r.pitbox.hidden = lv === 0;
+  if (lv) {
+    r.ph.textContent = lv <= 4 ? `피트인 · 바퀴 ${lv}개 빠짐` : lv === 5 ? "피트인 · 앞날개까지 부러졌어요" : lv === 6 ? "피트인 · DRS 고장, +2 잠김" : "블랙 플래그 · 배터리 방전";
+    renderLadder(r.ladder, st);
+    drawTyreRow(r.tyres, lv, kid);
+    const g = STAGES[lv];
+    r.pm.textContent = lv === MAX_STAGE
+      ? "오늘 레이스는 여기까지예요. 충전 미션을 마치거나 하룻밤 자고 나면 배터리가 돌아와요."
+      : `다음 수리: ${g.name}${g.cost > 1 ? ` · 칭찬 ${g.cost}번 중 ${st.prog}번 완료` : ""}. 자고 일어나면 정비팀이 한 단계씩 고쳐 줘요.`;
+  }
+  r.btns.hidden = lv >= MAX_STAGE;
+  r.charge.hidden = lv < MAX_STAGE;
+  r.one.innerHTML = lv ? "+1 칭찬<small>수리 한 번</small>" : "+1 칭찬<small>한 칸 전진</small>";
+  r.drs.classList.toggle("locked", lv >= 6);
+  r.drs.setAttribute("aria-disabled", String(lv >= 6));
+  r.drs.innerHTML = lv >= 6 ? "DRS 잠김<small>DRS 수리가 끝나면 열려요</small>" : lv ? "+2 DRS<small>수리 두 번</small>" : "+2 DRS<small>아주 큰 칭찬</small>";
+  r.pitbtn.disabled = lv >= MAX_STAGE;
+  r.pitbtn.textContent = ["바퀴 빼기 · 말 안 들을 때", "바퀴 하나 더 빼기", "바퀴 하나 더 빼기", "마지막 바퀴 빼기", "앞날개 부러뜨리기", "DRS 고장 내기", "배터리 방전 · 블랙 플래그", "더 고장 낼 곳이 없어요"][lv];
   if (r.tyreEls.length) applyTyres(kid, off);
   r.big.textContent = total;
   r.m1.textContent = "";
@@ -917,7 +1094,9 @@ function fmtTime(ms){
 }
 
 function renderLog(){
-  const list = $("#log"), es = state.entries.slice().sort((a, b) => b.at - a.at).slice(0, 30);
+  // the night crew's repairs are worked out from the log, so they show as rows of their own (not deletable)
+  const nightRows = KIDS.flatMap((k) => damageReplay(k).nights.map((n) => ({ id: "night-" + k + n.at + n.stage, type: "night", kid: k, pts: 0, at: n.at, reason: `밤사이 정비팀이 ${STAGES[n.stage].name}를 고쳤어요${n.refund ? ` · 먼저 받은 칭찬 ${n.refund}번은 점수로 돌려줌` : ""}`, refund: n.refund, by: "" })));
+  const list = $("#log"), es = state.entries.concat(nightRows).sort((a, b) => b.at - a.at).slice(0, 30);
   list.textContent = "";
   $("#logEmpty").hidden = es.length > 0;
   const open = isUnlocked();
@@ -926,15 +1105,15 @@ function renderLog(){
     const dot = document.createElement("span"); dot.className = "dot"; dot.style.background = cfg().drivers[e.kid].color;
     const k = document.createElement("span"); k.className = "k"; k.textContent = cfg().drivers[e.kid].name;
     const r = document.createElement("span"); r.className = "r"; r.textContent = e.reason;
-    const label = { pit: "🛑 PIT", tyreoff: "🔧 바퀴 −1", tyreon: `🛞 타이어 +${e.n || 1}` }[e.type];
+    const label = { pit: "PIT", tyreoff: "고장", tyreon: `수리 +${e.n || 1}`, recharge: "충전", night: e.refund ? `밤샘 수리 +${e.refund}` : "밤샘 수리" }[e.type];
     if (e.type === "pit" || e.type === "tyreoff") li.className = "pitrow";
-    if (e.type === "tyreon") li.className = "tyrerow";
+    if (e.type === "tyreon" || e.type === "recharge" || e.type === "night") li.className = "tyrerow";
     const p = document.createElement("span"); p.className = "p"; p.textContent = label || `+${e.pts}`;
     if (e.pts >= 2) p.style.color = "var(--purple)";
     const by = document.createElement("span"); by.className = "by"; by.textContent = e.by || "";
     const t = document.createElement("span"); t.className = "t"; t.textContent = fmtTime(e.at);
     li.append(dot, k, r, p, by, t);
-    if (open) {
+    if (open && e.type !== "night") {
       const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "지우기";
       let timer = null;
       del.addEventListener("click", () => {
@@ -1009,16 +1188,18 @@ function confetti(color, accent){
 }
 
 /* ---------- render all ---------- */
-async function renderAll(){
+// quiet: a render nobody asked for (midnight, page coming back) moves cars but pops no celebration
+async function renderAll(quiet){
   const t = totals();
   for (const k of KIDS) renderCard(k, t[k]);
   renderTeam(t);
   renderCal(t);
   renderLog();
+  showNightNote();
   await Promise.all(KIDS.map(async (k) => {
     const prev = shown[k];
     await moveTo(k, t[k]);
-    if (prev !== null && t[k] > prev && t[k] - prev <= 3) {
+    if (!quiet && prev !== null && t[k] > prev && t[k] - prev <= 3) {
       const ms = milestones(prev, t[k]);
       if (ms) celebrate(k, ms);
     }
@@ -1034,9 +1215,9 @@ function openAdd(kid, pts){
   const d = cfg().drivers[kid];
   $("#addForm").style.setProperty("--team", pts === 2 ? "var(--purple)" : d.color);
   $("#addForm").style.setProperty("--on-team", pts === 2 ? "#fff" : onColor(d.color));
-  const off = tyresOff(kid);
-  $("#addTitle").textContent = off
-    ? `${d.name}에게 새 타이어 ${Math.min(pts, off)}개${pts > off ? ` + ${pts - off}칸 전진` : ""}`
+  const lv = damage(kid).level;
+  $("#addTitle").textContent = lv
+    ? `${d.name}에게 칭찬 ${pts}번 · 수리할게요`
     : `${d.name}에게 +${pts}${pts === 2 ? " DRS" : ""}`;
   $("#addReason").value = "";
   const chips = $("#chips"); chips.textContent = "";
@@ -1074,21 +1255,24 @@ $("#addForm").addEventListener("submit", (ev) => {
   const reason = [addCtx.chip, txt].filter(Boolean).join(" · ") || "칭찬";
   $("#addVeil").hidden = true;
   const { kid, pts, by } = addCtx, name = cfg().drivers[kid].name;
-  const now = Date.now(), off = tyresOff(kid), fit = Math.min(pts, off), move = pts - fit, ids = [];
-  // In the pit, praise fits new tyres first; any praise left over moves the car as usual.
-  const g = fit && move ? newId(now) : undefined; // one praise split in two rows → shared group id
-  if (fit) { const id = newId(now); ids.push(id); state.entries.push({ id, type: "tyreon", n: fit, kid, pts: 0, reason, by, at: now, ...(g && { g }) }); }
-  if (move) { const id = newId(now + 1); ids.push(id); state.entries.push({ id, kid, pts: move, reason, by, at: now + 1, ...(g && { g }) }); }
+  const now = Date.now(), before = damageReplay(kid), ids = [];
+  if (before.level >= MAX_STAGE || (pts === 2 && before.level >= 6)) { setStatus(`${name}는 지금 그 버튼을 쓸 수 없어요.`, true); return; }
+  // Broken: the whole praise goes in as repair units; whatever finds nothing to repair moves the car (replay bonus).
+  const id = newId(now); ids.push(id);
+  state.entries.push(before.level ? { id, type: "tyreon", n: pts, kid, pts: 0, reason, by, at: now } : { id, kid, pts, reason, by, at: now });
   setGiver(by);
   save();
   renderAll();
-  const left = off - fit;
   let msg;
-  if (fit && left === 0) msg = `${name} 새 타이어 장착 완료! 피트아웃, 다시 출발해요`;
-  else if (fit) msg = `${name} 새 타이어 ${fit}개 · 아직 ${left}개 남았어요`;
-  else msg = `${name} +${move} 기록했어요`;
-  if (fit && move) msg += ` (+${move}칸 전진)`;
-  if (storageOk) setStatus([fit ? msg : "", backupNudge()].filter(Boolean).join(" · "));
+  if (!before.level) msg = `${name} +${pts} 기록했어요`;
+  else {
+    const after = damageReplay(kid), fixed = before.level - after.level;
+    if (after.level === 0) msg = `${name} 수리 끝! 피트아웃, 다시 출발해요`;
+    else if (fixed > 0) msg = `${name} ${STAGES[before.level].name}${fixed > 1 ? ` 등 ${fixed}곳` : ""} 수리 완료 · 다음은 ${STAGES[after.level].name}`;
+    else msg = `${name} ${STAGES[after.level].name} 수리 중 (${after.prog}/${STAGES[after.level].cost})`;
+    if (after.bonus > before.bonus) msg += ` · +${after.bonus - before.bonus}칸 전진`;
+  }
+  if (storageOk) setStatus([before.level ? msg : "", backupNudge()].filter(Boolean).join(" · "));
   showUndo(msg, ids);
 });
 
@@ -1127,30 +1311,71 @@ $("#toastUndo").addEventListener("click", () => {
 
 /* ---------- tyre-off penalty ---------- */
 let pitCtx = null;
+const BREAK_NOTE = {
+  1: "앞 왼쪽 바퀴를 빼고 피트로 들어가요. 칭찬 한 번에 새 타이어 하나씩 끼워요.",
+  2: "앞 오른쪽 바퀴도 빠져요.", 3: "뒤 왼쪽 바퀴도 빠져요.", 4: "마지막 바퀴까지 빠져요.",
+  5: "앞날개가 부러져요. 고치려면 칭찬이 두 번 필요해요.",
+  6: "DRS 가 고장 나서 +2 버튼이 잠겨요. 고치려면 칭찬이 두 번 필요해요.",
+  7: "배터리가 다 떨어져서 블랙 플래그! 오늘 레이스는 끝이에요. 충전 미션을 하거나 하룻밤 자고 나면 배터리가 돌아와요."
+};
 function openPit(kid){
-  const off = tyresOff(kid);
-  if (off >= 4) return;
+  const lv = damage(kid).level;
+  if (lv >= MAX_STAGE) { renderAll(true); setStatus("이미 블랙 플래그예요. 더 고장 낼 곳이 없어요.", true); return; }
   pitCtx = { kid, by: lastGiver };
   buildGiverSeg($("#pitBy"), pitCtx);
-  $("#pitTitle").textContent = `${cfg().drivers[kid].name} 바퀴 빼기`;
-  $("#pitNote").textContent = `${TYRES[off].label} 바퀴를 빼고 피트로 들어가요. 점수는 그대로예요. 칭찬을 받으면 새 타이어를 끼워요(+1 칭찬 1개, +2 DRS 2개). 4개가 다 돌아오면 다시 달릴 수 있어요.`;
-  drawTyreRow($("#pitTyres"), off + 1, kid, off);
+  $("#pitTitle").textContent = `${cfg().drivers[kid].name} · ${STAGES[lv + 1].name} 고장`;
+  $("#pitNote").textContent = `${BREAK_NOTE[lv + 1]} 점수는 그대로예요.`;
+  $("#pitGo").textContent = lv + 1 <= 4 ? "바퀴 빼기" : lv + 1 === 7 ? "블랙 플래그" : "고장 내기";
+  drawTyreRow($("#pitTyres"), lv, kid, lv + 1);
   $("#pitWhy").value = "";
   $("#pitVeil").hidden = false;
 }
+
+/* ---------- 충전 미션 (battery back after a black flag) ---------- */
+const CHARGE_MISSIONS = ["3분 동안 조용히 진정하기", "속상하게 한 사람에게 사과하기", "어지른 것 치우기", "가족 한 명 도와주기"];
+let chargeCtx = null;
+function openCharge(kid){
+  if (damage(kid).level < MAX_STAGE) { renderAll(true); setStatus("배터리는 이미 돌아왔어요. 화면을 새로 그렸어요.", true); return; }
+  chargeCtx ={ kid, by: lastGiver, mission: CHARGE_MISSIONS[0] };
+  $("#chargeTitle").textContent = `${cfg().drivers[kid].name} 충전 미션`;
+  const box = $("#chargeChips"); box.textContent = "";
+  for (const m of CHARGE_MISSIONS) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = m;
+    b.setAttribute("aria-pressed", String(m === chargeCtx.mission));
+    b.addEventListener("click", () => { chargeCtx.mission = m; box.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === b))); });
+    box.appendChild(b);
+  }
+  buildGiverSeg($("#chargeBy"), chargeCtx);
+  $("#chargeVeil").hidden = false;
+}
+$("#chargeCancel").addEventListener("click", () => { $("#chargeVeil").hidden = true; });
+$("#chargeForm").addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  if (!chargeCtx) return;
+  const { kid, by, mission } = chargeCtx;
+  $("#chargeVeil").hidden = true;
+  if (damage(kid).level < MAX_STAGE) return;
+  const now = Date.now(), id = newId(now);
+  state.entries.push({ id, type: "recharge", kid, pts: 0, reason: `충전 미션 · ${mission}`, by, at: now });
+  setGiver(by);
+  save(); renderAll();
+  const msg = `${cfg().drivers[kid].name} 배터리 충전 완료 · 다음은 DRS 수리`;
+  setStatus(msg);
+  showUndo(msg, id);
+});
 $("#pitCancel").addEventListener("click", () => { $("#pitVeil").hidden = true; });
 $("#pitForm").addEventListener("submit", (ev) => {
   ev.preventDefault();
   if (!pitCtx) return;
   const { kid, by } = pitCtx;
   $("#pitVeil").hidden = true;
-  const off = tyresOff(kid);
-  if (off >= 4) return;
-  const now = Date.now(), id = newId(now), why = $("#pitWhy").value.trim();
-  state.entries.push({ id, type: "tyreoff", kid, pts: 0, reason: `${why || "말 안 들음"} → ${TYRES[off].label} 바퀴 빠짐`, by, at: now });
+  const lv = damage(kid).level;
+  if (lv >= MAX_STAGE) return;
+  const now = Date.now(), id = newId(now), why = $("#pitWhy").value.trim(), part = STAGES[lv + 1].name;
+  state.entries.push({ id, type: "tyreoff", brk: 1, kid, pts: 0, reason: `${why || "말 안 들음"} → ${part} 고장`, by, at: now });
   setGiver(by);
   save(); renderAll();
-  const msg = `${cfg().drivers[kid].name} 바퀴 ${off + 1}개 빠짐 · 피트인`;
+  const msg = lv + 1 === MAX_STAGE ? `${cfg().drivers[kid].name} 배터리 방전 · 블랙 플래그` : `${cfg().drivers[kid].name} ${part} 고장 · 피트인`;
   setStatus(msg);
   showUndo(msg, id);
 });
@@ -1253,9 +1478,37 @@ $("#setForm").addEventListener("submit", async (ev) => {
   setStatus(pin ? "설정과 새 비밀번호를 저장했어요" : "설정을 저장했어요");
 });
 
+/* ---------- night crew note ---------- */
+// Shows which stages the night crew fixed since this iPad last acknowledged it (a per-viewer convenience).
+const NIGHT_KEY = "praise-gp.v2.nightseen";
+function nightSeen(){ try { return Number(localStorage.getItem(NIGHT_KEY)) || 0; } catch (e) { return 0; } }
+function showNightNote(){
+  const seen = nightSeen(), lines = [];
+  for (const k of KIDS) {
+    const fixed = damageReplay(k).nights.filter((n) => n.at > seen);
+    if (fixed.length) lines.push(`${cfg().drivers[k].name}: ${fixed.map((n) => STAGES[n.stage].name).join(", ")}`);
+  }
+  const box = $("#night");
+  box.hidden = !lines.length;
+  if (lines.length) $("#nightBody").textContent = `${lines.join(" · ")} 수리 완료. 오늘도 칭찬으로 남은 곳을 고쳐 봐요.`;
+}
+$("#nightOk").addEventListener("click", () => {
+  try { localStorage.setItem(NIGHT_KEY, String(Date.now())); } catch (e) {}
+  $("#night").hidden = true;
+});
+// If the page stays open past midnight, let the night crew show up without a reload. iPad Safari pauses
+// timers while the screen sleeps, so coming back to the page also re-renders and re-arms the timer.
+let midnightTimer = null;
+function scheduleMidnight(){
+  clearTimeout(midnightTimer);
+  midnightTimer = setTimeout(() => { renderAll(true); scheduleMidnight(); }, Math.max(1000, nextMidnight(Date.now()) - Date.now() + 1500));
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { renderAll(true); scheduleMidnight(); } });
+window.addEventListener("pageshow", (ev) => { if (ev.persisted) { renderAll(true); scheduleMidnight(); } });
+
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  for (const id of ["#pinVeil", "#addVeil", "#pitVeil", "#setVeil"]) if (!$(id).hidden) { $(id).hidden = true; pinCb = null; break; }
+  for (const id of ["#pinVeil", "#addVeil", "#pitVeil", "#chargeVeil", "#setVeil"]) if (!$(id).hidden) { $(id).hidden = true; pinCb = null; break; }
 });
 
 /* ---------- boot ---------- */
@@ -1263,6 +1516,7 @@ load();
 for (const k of KIDS) buildCard(k);
 refreshLock();
 renderAll();
+scheduleMidnight();
 if (!storageOk) setStatus("이 브라우저에서는 저장할 수 없어요. 개인정보 보호(비공개) 모드를 끄고 다시 열어 주세요.", true);
 else setStatus(backupNudge() || (state.entries.length ? "" : "처음이에요. 오른쪽 위 설정에서 비밀번호를 만들고 아이들 이름을 넣어 주세요."));
 })();
